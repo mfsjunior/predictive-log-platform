@@ -1,0 +1,62 @@
+# Application
+spring:
+  application:
+    name: predictive-log-api
+  
+  # Database
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/logplatform}
+    username: ${SPRING_DATASOURCE_USERNAME:logadmin}
+    password: ${SPRING_DATASOURCE_PASSWORD:logadmin123}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+# ML Service
+ml:
+  service:
+    url: ${ML_SERVICE_URL:http://localhost:8000}
+    timeout: 30000
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: predictive-log-api
+
+# Swagger
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# Server
+server:
+  port: 8080
+
+# Logging
+logging:
+  level:
+    com.logplatform: INFO
+    org.springframework.web: INFO

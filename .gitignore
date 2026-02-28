@@ -1,0 +1,42 @@
+# Build outputs
+target/
+*.class
+*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+
+# Data & Models (generated)
+data/*.csv
+data/plots/
+data/drift_reports/
+models/*.joblib
+
+# MLflow
+mlruns/
+mlflow/mlflow.db
+
+# Docker
+.docker/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

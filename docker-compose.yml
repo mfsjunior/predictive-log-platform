@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: plip-postgres
+    environment:
+      POSTGRES_DB: logplatform
+      POSTGRES_USER: logadmin
+      POSTGRES_PASSWORD: logadmin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U logadmin -d logplatform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - logplatform-net
+
+  mlflow:
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
+    container_name: plip-mlflow
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+      - ./models:/models
+    environment:
+      MLFLOW_TRACKING_URI: "sqlite:///mlflow/mlflow.db"
+    networks:
+      - logplatform-net
+
+  python-ml:
+    build:
+      context: ./python-ml-service
+      dockerfile: Dockerfile
+    container_name: plip-python-ml
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    environment:
+      DATABASE_URL: "postgresql://logadmin:logadmin123@postgres:5432/logplatform"
+      MLFLOW_TRACKING_URI: "http://mlflow:5000"
+      MODELS_DIR: "/app/models"
+      DATA_DIR: "/app/data"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    networks:
+      - logplatform-net
+
+  java-api:
+    build:
+      context: ./java-api
+      dockerfile: Dockerfile
+    container_name: plip-java-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/logplatform"
+      SPRING_DATASOURCE_USERNAME: logadmin
+      SPRING_DATASOURCE_PASSWORD: logadmin123
+      ML_SERVICE_URL: "http://python-ml:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      python-ml:
+        condition: service_started
+    networks:
+      - logplatform-net
+
+volumes:
+  postgres_data:
+  mlflow_data:
+
+networks:
+  logplatform-net:
+    driver: bridge
