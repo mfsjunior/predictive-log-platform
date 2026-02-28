@@ -40,3 +40,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Docs explicativos (somente local)
+ABOUT.md
+EVOLUTION.md
+MLFLOW_GUIDE.md
+TECHNOLOGIES.md
