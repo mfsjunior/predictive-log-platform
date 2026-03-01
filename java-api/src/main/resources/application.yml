@@ -68,3 +68,11 @@ logging:
   level:
     com.logplatform: INFO
     org.springframework.web: INFO
+
+# JWT Security
+jwt:
+  secret: ${JWT_SECRET:plip-secret-key-change-in-production-min-32-chars!!}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+  admin:
+    username: ${JWT_ADMIN_USER:admin}
+    password: ${JWT_ADMIN_PASSWORD:admin123}
