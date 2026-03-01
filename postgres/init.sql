@@ -61,4 +61,22 @@ CREATE INDEX IF NOT EXISTS idx_web_logs_method ON web_logs(method);
 CREATE INDEX IF NOT EXISTS idx_predictions_type ON predictions(prediction_type);
 CREATE INDEX IF NOT EXISTS idx_predictions_created ON predictions(created_at);
 CREATE INDEX IF NOT EXISTS idx_model_metadata_active ON model_metadata(is_active);
-CREATE INDEX IF NOT EXISTS idx_training_runs_status ON training_runs(status);
+CREATE INDEX idx_training_status ON training_runs(status);
+CREATE INDEX idx_training_started ON training_runs(started_at);
+
+-- =============================================
+-- Table: alerts (real-time anomaly alerts)
+-- =============================================
+CREATE TABLE IF NOT EXISTS alerts (
+    id              BIGSERIAL PRIMARY KEY,
+    alert_type      VARCHAR(50)     NOT NULL DEFAULT 'anomaly_detected',
+    severity        VARCHAR(20)     NOT NULL DEFAULT 'MEDIUM',
+    log_data        JSONB,
+    anomaly_details JSONB,
+    acknowledged    BOOLEAN         NOT NULL DEFAULT FALSE,
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_alerts_severity ON alerts(severity);
+CREATE INDEX idx_alerts_created ON alerts(created_at);
+CREATE INDEX idx_alerts_acknowledged ON alerts(acknowledged);

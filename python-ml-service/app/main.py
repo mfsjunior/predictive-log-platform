@@ -59,6 +59,10 @@ app.include_router(predict.router, tags=["Prediction"])
 app.include_router(anomaly.router, tags=["Anomaly Detection"])
 app.include_router(monitor.router, tags=["Monitoring"])
 
+# WebSocket router for real-time alerts
+from app.routers import websocket as ws_router
+app.include_router(ws_router.router, tags=["WebSocket"])
+
 
 @app.on_event("startup")
 async def startup_event():
