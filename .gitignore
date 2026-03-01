@@ -43,6 +43,7 @@ Thumbs.db
 
 # Docs explicativos (somente local)
 ABOUT.md
+CICD.md
 EVOLUTION.md
 EVOLUTION_V2.md
 MLFLOW_GUIDE.md
