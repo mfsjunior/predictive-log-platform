@@ -60,6 +60,58 @@ async def check_drift():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/monitor/retrain-if-drift")
+async def retrain_if_drift():
+    """
+    Check drift and retrain models if drift exceeds 50% threshold.
+    Returns drift status and whether retraining was triggered.
+    """
+    reference = get_reference_data()
+    if reference is None:
+        raise HTTPException(status_code=503, detail="No reference data. Train first (POST /train).")
+
+    try:
+        current_df = _fetch_current_data()
+        if current_df is None or len(current_df) == 0:
+            return {"drift_detected": False, "retrained": False, "reason": "No current data available."}
+
+        from app.feature_engineering import engineer_features
+        current_features = engineer_features(current_df)
+
+        result = generate_drift_report(current_data=current_features)
+        dataset_drift = result.get("dataset_drift", False)
+        drift_share = result.get("drift_share", 0.0)
+
+        if dataset_drift:
+            logger.warning(f"Drift detected (share={drift_share:.2%}). Triggering retraining...")
+            from app.routers.train import train_models
+            train_result = await train_models()
+            return {
+                "drift_detected": True,
+                "drift_share": drift_share,
+                "retrained": True,
+                "training_result": {
+                    "status": train_result.status,
+                    "training_time_seconds": train_result.training_time_seconds,
+                    "best_classifier": train_result.classifier_results.get("best_model"),
+                    "best_regressor": train_result.regressor_results.get("best_model"),
+                },
+            }
+        else:
+            return {
+                "drift_detected": False,
+                "drift_share": drift_share,
+                "retrained": False,
+                "reason": "No significant drift detected. Models are up to date.",
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Retrain-if-drift failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/monitor/drift/report")
 async def get_drift_report():
     """

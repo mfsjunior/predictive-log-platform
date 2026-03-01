@@ -91,6 +91,23 @@ async def startup_event():
 
     logger.info("ML Service startup complete.")
 
+    # Start periodic drift monitor
+    try:
+        from app.scheduler import start_scheduler
+        start_scheduler()
+    except Exception as e:
+        logger.warning(f"Scheduler startup failed (non-critical): {e}")
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop scheduler on shutdown."""
+    try:
+        from app.scheduler import stop_scheduler
+        stop_scheduler()
+    except Exception:
+        pass
+
 
 @app.get("/", tags=["Health"])
 async def root():
