@@ -1,0 +1,30 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/Dockerfile'
+      - 'docker-compose.yml'
+      - '.github/workflows/docker-build.yml'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Python ML Service
+        run: docker build -t plip-python-ml:test ./python-ml-service
+
+      - name: Build MLflow Server
+        run: docker build -t plip-mlflow:test ./mlflow
+
+      - name: Build Java API
+        run: docker build -t plip-java-api:test ./java-api
+
+      - name: Verify Docker Compose config
+        run: docker compose config --quiet

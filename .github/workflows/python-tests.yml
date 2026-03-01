@@ -1,0 +1,50 @@
+name: Python Tests
+
+on:
+  push:
+    branches: [ main, 'feature/**' ]
+    paths:
+      - 'python-ml-service/**'
+      - '.github/workflows/python-tests.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'python-ml-service/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: python-ml-service
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: 'python-ml-service/requirements.txt'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install ruff
+
+      - name: Lint with ruff
+        run: |
+          ruff check app/ tests/ --output-format=github
+
+      - name: Run tests
+        run: |
+          python -m pytest tests/ -v --tb=short --junitxml=test-results.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-test-results
+          path: python-ml-service/test-results.xml
