@@ -10,7 +10,7 @@ from datetime import datetime
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from pydantic import BaseModel
 
 from app.config import settings

@@ -3,7 +3,6 @@ WebSocket endpoint for real-time anomaly alerts.
 Clients connect to ws://host:8000/ws/alerts and receive push notifications
 whenever an anomaly is detected in ingested logs.
 """
-import asyncio
 import json
 import logging
 from datetime import datetime

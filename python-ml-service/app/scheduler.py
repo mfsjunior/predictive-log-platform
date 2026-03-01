@@ -4,7 +4,7 @@ Runs every 6 hours — if drift > 50%, triggers model retraining.
 """
 import asyncio
 import logging
-from datetime import datetime
+
 
 logger = logging.getLogger(__name__)
 

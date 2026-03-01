@@ -15,7 +15,6 @@ from app.feature_engineering import (
 )
 from app.models.classifier import ClassifierPipeline
 from app.models.regressor import RegressorPipeline
-from app.models.anomaly import AnomalyDetector
 
 
 class TestDatasetGenerator:

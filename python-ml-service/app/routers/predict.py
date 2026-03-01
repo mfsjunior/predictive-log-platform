@@ -4,7 +4,6 @@ Prediction router — handles error probability and response time predictions.
 import time
 import logging
 
-import pandas as pd
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
