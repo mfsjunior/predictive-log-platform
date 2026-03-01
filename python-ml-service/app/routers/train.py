@@ -1,7 +1,7 @@
 """
 Training router — handles model training pipeline.
 POST /train triggers full ML pipeline: data fetch, feature engineering,
-model training, evaluation, MLflow logging, and model persistence.
+model training, evaluation, MLflow logging (via MlflowTracker), and model persistence.
 """
 import os
 import time
@@ -30,14 +30,20 @@ from app.visualization.plots import (
     plot_feature_importance,
     plot_shap_values,
 )
+from app.infrastructure.model_registry import ModelRegistry
+from app.infrastructure.mlflow_tracker import MlflowTracker
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Global model references (loaded at startup or after training)
-classifier_pipeline: ClassifierPipeline | None = None
-regressor_pipeline: RegressorPipeline | None = None
-anomaly_detector: AnomalyDetector | None = None
+# Infrastructure: model registry (replaces global mutable vars)
+registry = ModelRegistry.instance()
+
+# Infrastructure: MLflow tracker (with retry + health check)
+tracker = MlflowTracker(
+    tracking_uri=settings.MLFLOW_TRACKING_URI,
+    experiment_name=settings.EXPERIMENT_NAME,
+)
 
 
 class TrainResponse(BaseModel):
@@ -139,14 +145,14 @@ async def train_models():
             X_reg, y_reg, test_size=settings.TEST_SIZE, random_state=settings.RANDOM_STATE,
         )
 
-        # 5. Train classifiers
-        classifier_pipeline = ClassifierPipeline()
+        # 5. Train classifiers (domain layer — pure, no framework)
+        classifier_pipeline = ClassifierPipeline(random_state=settings.RANDOM_STATE)
         clf_results = classifier_pipeline.train_and_evaluate(
             X_clf_train, X_clf_test, y_clf_train, y_clf_test
         )
 
-        # 6. Train regressors
-        regressor_pipeline = RegressorPipeline()
+        # 6. Train regressors (domain layer)
+        regressor_pipeline = RegressorPipeline(random_state=settings.RANDOM_STATE)
         reg_results = regressor_pipeline.train_and_evaluate(
             X_reg_train, X_reg_test, y_reg_train, y_reg_test
         )
@@ -155,7 +161,12 @@ async def train_models():
         anomaly_detector = AnomalyDetector()
         anomaly_detector.fit(df_features, clf_features)
 
-        # 8. Save best models
+        # 8. Register models in registry (replaces globals)
+        registry.register("classifier", classifier_pipeline, {"version": model_version})
+        registry.register("regressor", regressor_pipeline, {"version": model_version})
+        registry.register("anomaly_detector", anomaly_detector, {"version": model_version})
+
+        # 9. Save best models to disk
         os.makedirs(settings.MODELS_DIR, exist_ok=True)
         classifier_pipeline.save_best_model(
             os.path.join(settings.MODELS_DIR, "best_classifier.joblib")
@@ -164,12 +175,19 @@ async def train_models():
             os.path.join(settings.MODELS_DIR, "best_regressor.joblib")
         )
 
-        # 9. Log to MLflow
-        try:
-            classifier_pipeline.log_to_mlflow(settings.EXPERIMENT_NAME)
-            regressor_pipeline.log_to_mlflow(settings.EXPERIMENT_NAME)
-        except Exception as e:
-            logger.warning(f"MLflow logging failed: {e}")
+        # 10. Log to MLflow via infrastructure tracker (with retry + health check)
+        for name, model in classifier_pipeline.models.items():
+            tracker.log_classifier_run(
+                name=name, model=model,
+                metrics=classifier_pipeline.results[name],
+                is_best=(name == classifier_pipeline.best_model_name),
+            )
+        for name, model in regressor_pipeline.models.items():
+            tracker.log_regressor_run(
+                name=name, model=model,
+                metrics=regressor_pipeline.results[name],
+                is_best=(name == regressor_pipeline.best_model_name),
+            )
 
         # 10. Generate plots
         plots_generated = _generate_plots(

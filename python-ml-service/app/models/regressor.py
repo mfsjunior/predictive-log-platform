@@ -2,21 +2,19 @@
 Regression models for response time prediction.
 Trains and compares Linear Regression, Random Forest Regressor, and Gradient Boosting.
 Evaluates using RMSE, MAE, and R².
+
+DOMAIN LAYER — no framework dependencies (no mlflow, no fastapi, no settings).
 """
 import os
 import logging
 from typing import Any
 
 import joblib
-import mlflow
-import mlflow.sklearn
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
-from app.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +22,12 @@ logger = logging.getLogger(__name__)
 class RegressorPipeline:
     """Pipeline for training and evaluating regression models."""
 
-    def __init__(self):
+    def __init__(self, random_state: int = 42):
         self.models: dict[str, Any] = {}
         self.results: dict[str, dict] = {}
         self.best_model_name: str | None = None
         self.best_model: Any = None
+        self._random_state = random_state
 
     def train_and_evaluate(
         self,
@@ -48,14 +47,14 @@ class RegressorPipeline:
             "random_forest_regressor": RandomForestRegressor(
                 n_estimators=200,
                 max_depth=12,
-                random_state=settings.RANDOM_STATE,
+                random_state=self._random_state,
                 n_jobs=-1,
             ),
             "gradient_boosting": GradientBoostingRegressor(
                 n_estimators=200,
                 max_depth=6,
                 learning_rate=0.1,
-                random_state=settings.RANDOM_STATE,
+                random_state=self._random_state,
             ),
         }
 
@@ -103,34 +102,7 @@ class RegressorPipeline:
         logger.info(f"Saved best regressor to {filepath}")
         return filepath
 
-    def log_to_mlflow(self, experiment_name: str) -> str | None:
-        """Log all models and metrics to MLflow."""
-        try:
-            mlflow.set_tracking_uri(settings.MLFLOW_TRACKING_URI)
-            mlflow.set_experiment(experiment_name)
-        except Exception as e:
-            logger.warning(f"MLflow tracking not available: {e}")
-            return None
-
-        run_id = None
-        for name, model in self.models.items():
-            try:
-                with mlflow.start_run(run_name=f"regressor_{name}") as run:
-                    if name == self.best_model_name:
-                        run_id = run.info.run_id
-                    metrics = self.results[name]
-                    mlflow.log_param("model_type", "regressor")
-                    mlflow.log_param("model_name", name)
-                    mlflow.log_metric("rmse", metrics["rmse"])
-                    mlflow.log_metric("mae", metrics["mae"])
-                    mlflow.log_metric("r2", metrics["r2"])
-                    mlflow.log_param("is_best", name == self.best_model_name)
-
-                    mlflow.sklearn.log_model(model, artifact_path="model")
-            except Exception as e:
-                logger.warning(f"Failed to log {name} to MLflow: {e}")
-
-        return run_id
+    # MLflow logging removed from domain — use MlflowTracker in infrastructure layer
 
     def predict_response_time(self, X: pd.DataFrame) -> dict:
         """
