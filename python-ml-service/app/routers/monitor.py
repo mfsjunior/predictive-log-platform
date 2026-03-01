@@ -12,6 +12,7 @@ from sqlalchemy import create_engine
 from app.config import settings
 from app.feature_engineering import engineer_features
 from app.monitoring.drift import generate_drift_report, get_reference_data
+from app.infrastructure.mlflow_tracker import MlflowTracker
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -140,37 +141,65 @@ async def get_drift_report():
 @router.get("/monitor/health")
 async def model_health():
     """
-    Return current model health status and metadata.
+    Return current model health status, metadata, and MLflow connectivity.
     """
-    from app.routers.train import classifier_pipeline, regressor_pipeline, anomaly_detector
+    from app.infrastructure.model_registry import ModelRegistry
 
-    classifier_status = "loaded" if (classifier_pipeline and classifier_pipeline.best_model) else "not_loaded"
-    regressor_status = "loaded" if (regressor_pipeline and regressor_pipeline.best_model) else "not_loaded"
-    anomaly_status = "loaded" if anomaly_detector else "not_loaded"
+    registry = ModelRegistry.instance()
+    reg_status = registry.status()
+
+    clf = registry.get("classifier")
+    reg = registry.get("regressor")
+    ad = registry.get("anomaly_detector")
+
+    classifier_status = "loaded" if (clf and clf.best_model) else "not_loaded"
+    regressor_status = "loaded" if (reg and reg.best_model) else "not_loaded"
+    anomaly_status = "loaded" if ad else "not_loaded"
 
     models_dir = settings.MODELS_DIR
     classifier_file = os.path.join(models_dir, "best_classifier.joblib")
     regressor_file = os.path.join(models_dir, "best_regressor.joblib")
+
+    # MLflow health check
+    tracker = MlflowTracker(
+        tracking_uri=settings.MLFLOW_TRACKING_URI,
+        experiment_name=settings.EXPERIMENT_NAME,
+    )
+    mlflow_status = tracker.health_check()
 
     return {
         "status": "healthy" if classifier_status == "loaded" else "degraded",
         "models": {
             "classifier": {
                 "status": classifier_status,
-                "name": getattr(classifier_pipeline, "best_model_name", None) if classifier_pipeline else None,
+                "name": getattr(clf, "best_model_name", None) if clf else None,
                 "file_exists": os.path.exists(classifier_file),
             },
             "regressor": {
                 "status": regressor_status,
-                "name": getattr(regressor_pipeline, "best_model_name", None) if regressor_pipeline else None,
+                "name": getattr(reg, "best_model_name", None) if reg else None,
                 "file_exists": os.path.exists(regressor_file),
             },
             "anomaly_detector": {
                 "status": anomaly_status,
             },
         },
+        "mlflow": mlflow_status,
         "reference_data_available": get_reference_data() is not None,
     }
+
+
+@router.get("/monitor/mlflow-status")
+async def mlflow_status():
+    """
+    Dedicated MLflow connectivity and status check.
+    Returns tracking URI, experiment name, and connection status.
+    """
+    tracker = MlflowTracker(
+        tracking_uri=settings.MLFLOW_TRACKING_URI,
+        experiment_name=settings.EXPERIMENT_NAME,
+    )
+    return tracker.health_check()
 
 
 def _fetch_current_data() -> pd.DataFrame | None:
@@ -183,3 +212,4 @@ def _fetch_current_data() -> pd.DataFrame | None:
     except Exception as e:
         logger.warning(f"Failed to fetch current data: {e}")
         return None
+
