@@ -14,7 +14,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U logadmin -d logplatform"]
+      test: [ "CMD-SHELL", "pg_isready -U logadmin -d logplatform" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -79,9 +79,44 @@ services:
     networks:
       - logplatform-net
 
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: plip-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      java-api:
+        condition: service_started
+      python-ml:
+        condition: service_started
+    networks:
+      - logplatform-net
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: plip-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/plip-overview.json
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - logplatform-net
+
 volumes:
   postgres_data:
   mlflow_data:
+  grafana_data:
+
 
 networks:
   logplatform-net:

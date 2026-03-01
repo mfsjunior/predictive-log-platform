@@ -1,0 +1,32 @@
+# ============================================================
+# Prometheus Configuration — PLIP
+# Scrapes metrics from Java API (Actuator) and Python ML (FastAPI)
+# ============================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Java API — Spring Boot Actuator Prometheus endpoint
+  - job_name: 'plip-java-api'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['java-api:8080']
+        labels:
+          service: 'java-api'
+          environment: 'docker'
+
+  # Python ML Service — prometheus-fastapi-instrumentator
+  - job_name: 'plip-python-ml'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['python-ml:8000']
+        labels:
+          service: 'python-ml'
+          environment: 'docker'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

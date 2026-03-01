@@ -41,6 +41,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Prometheus metrics instrumentation — exposes /metrics endpoint
+try:
+    from prometheus_fastapi_instrumentator import Instrumentator
+    Instrumentator(
+        should_group_status_codes=False,
+        should_ignore_untemplated=True,
+        excluded_handlers=["/metrics", "/health"],
+    ).instrument(app).expose(app, include_in_schema=True, tags=["Monitoring"])
+    logger.info("Prometheus metrics enabled at /metrics")
+except ImportError:
+    logger.warning("prometheus-fastapi-instrumentator not installed. Metrics endpoint disabled.")
+
 # Include routers
 app.include_router(train.router, tags=["Training"])
 app.include_router(predict.router, tags=["Prediction"])

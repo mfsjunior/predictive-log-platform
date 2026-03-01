@@ -1,0 +1,13 @@
+# Grafana Dashboard Provider — loads JSON dashboards from /var/lib/grafana/dashboards
+apiVersion: 1
+
+providers:
+  - name: 'PLIP Dashboards'
+    orgId: 1
+    folder: 'PLIP'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false
