@@ -146,7 +146,6 @@ async def model_health():
     from app.infrastructure.model_registry import ModelRegistry
 
     registry = ModelRegistry.instance()
-    reg_status = registry.status()
 
     clf = registry.get("classifier")
     reg = registry.get("regressor")

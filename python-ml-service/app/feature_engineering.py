@@ -2,7 +2,6 @@
 Feature engineering module for web log ML pipeline.
 Creates derived features required for classification and regression models.
 """
-import numpy as np
 import pandas as pd
 
 

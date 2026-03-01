@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.routers import train, predict, anomaly, monitor
+from app.routers import websocket as ws_router
 
 # Configure logging
 logging.basicConfig(
@@ -60,7 +61,6 @@ app.include_router(anomaly.router, tags=["Anomaly Detection"])
 app.include_router(monitor.router, tags=["Monitoring"])
 
 # WebSocket router for real-time alerts
-from app.routers import websocket as ws_router
 app.include_router(ws_router.router, tags=["WebSocket"])
 
 

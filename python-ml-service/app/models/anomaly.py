@@ -2,7 +2,6 @@
 Anomaly detection module using Z-score and Isolation Forest.
 """
 import logging
-from typing import Any
 
 import numpy as np
 import pandas as pd
