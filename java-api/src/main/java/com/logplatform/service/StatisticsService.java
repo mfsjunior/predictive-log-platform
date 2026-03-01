@@ -4,6 +4,7 @@ import com.logplatform.dto.StatsSummary;
 import com.logplatform.repository.WebLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -16,6 +17,7 @@ public class StatisticsService {
 
     private final WebLogRepository webLogRepository;
 
+    @Cacheable(value = "statistics", key = "'summary'")
     public StatsSummary computeSummary() {
         long totalRecords = webLogRepository.count();
 
