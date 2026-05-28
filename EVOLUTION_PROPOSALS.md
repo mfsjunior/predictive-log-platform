@@ -1,37 +1,37 @@
 # EVOLUTION PROPOSALS ? Predictive Log Intelligence Platform (PLIP)
 
-> Propostas de evolução organizadas em módulos independentes para trabalho em duplas.
-> Cada módulo tem escopo delimitado, arquivos afetados mapeados e critérios de aceitação claros.
-> Os módulos são ordenados por **dependência técnica**: resolva débitos de base antes de features novas.
+> Propostas de evoluï¿½ï¿½o organizadas em mï¿½dulos independentes para trabalho em duplas.
+> Cada mï¿½dulo tem escopo delimitado, arquivos afetados mapeados e critï¿½rios de aceitaï¿½ï¿½o claros.
+> Os mï¿½dulos sï¿½o ordenados por **dependï¿½ncia tï¿½cnica**: resolva dï¿½bitos de base antes de features novas.
 
 ---
 
 ## COMO USAR ESTE DOCUMENTO
 
-- Cada módulo é autossuficiente: uma dupla pode pegá-lo sem bloquear outra
-- Leia o `PROJECT_CONTEXT.md` antes de iniciar qualquer módulo
+- Cada mï¿½dulo ï¿½ autossuficiente: uma dupla pode pegï¿½-lo sem bloquear outra
+- Leia o `PROJECT_CONTEXT.md` antes de iniciar qualquer mï¿½dulo
 - Siga o fluxo do `ENGINEERING_GUIDE.md` antes de codar
-- Ao concluir um módulo, marque o status e registre decisões no `PROJECT_CONTEXT.md` (seção 12)
+- Ao concluir um mï¿½dulo, marque o status e registre decisï¿½es no `PROJECT_CONTEXT.md` (seï¿½ï¿½o 12)
 
 ---
 
-## ÍNDICE DE MÓDULOS
+## ï¿½NDICE DE Mï¿½DULOS
 
-| ID | Módulo | Camada | Prioridade | Pré-requisito |
+| ID | Mï¿½dulo | Camada | Prioridade | Prï¿½-requisito |
 |---|---|---|---|---|
-| M-01 | GlobalExceptionHandler | Java API | CRÍTICA | ? |
-| M-02 | ModelRegistry Python | Python ML | CRÍTICA | ? |
+| M-01 | GlobalExceptionHandler | Java API | CRï¿½TICA | ? |
+| M-02 | ModelRegistry Python | Python ML | CRï¿½TICA | ? |
 | M-03 | Mapper Layer (Java) | Java API | ALTA | M-01 |
 | M-04 | CORS + Network Isolation | Infra / Python | ALTA | ? |
-| M-05 | Paginação de Logs e Predições | Java API | ALTA | M-01, M-03 |
-| M-06 | Soft Delete nas Entidades | Java API | MÉDIA | M-03 |
-| M-07 | Rate Limiting na API Java | Java API | MÉDIA | M-01 |
-| M-08 | Filtros Avançados de Estatísticas | Java API + Python | MÉDIA | M-05 |
-| M-09 | Health Checks Detalhados | Infra / Java | MÉDIA | ? |
-| M-10 | Testes de Integração Java | Java API | ALTA | M-01, M-03 |
+| M-05 | Paginaï¿½ï¿½o de Logs e Prediï¿½ï¿½es | Java API | ALTA | M-01, M-03 |
+| M-06 | Soft Delete nas Entidades | Java API | Mï¿½DIA | M-03 |
+| M-07 | Rate Limiting na API Java | Java API | Mï¿½DIA | M-01 |
+| M-08 | Filtros Avanï¿½ados de Estatï¿½sticas | Java API + Python | Mï¿½DIA | M-05 |
+| M-09 | Health Checks Detalhados | Infra / Java | Mï¿½DIA | ? |
+| M-10 | Testes de Integraï¿½ï¿½o Java | Java API | ALTA | M-01, M-03 |
 | M-11 | Testes Python ? Cobertura Router | Python ML | ALTA | M-02 |
-| M-12 | Endpoint de Histórico de Predições | Java API | BAIXA | M-05 |
-| M-13 | Re-treino Automático Agendado | Python ML | BAIXA | M-02 |
+| M-12 | Endpoint de Histï¿½rico de Prediï¿½ï¿½es | Java API | BAIXA | M-05 |
+| M-13 | Re-treino Automï¿½tico Agendado | Python ML | BAIXA | M-02 |
 | M-14 | Alertas via WebSocket | Python ML | BAIXA | M-02 |
 
 ---
@@ -40,16 +40,16 @@
 
 ## M-01 ? GlobalExceptionHandler (Java API)
 
-**Prioridade**: CRÍTICA
+**Prioridade**: CRï¿½TICA
 **Dupla**: Desenvolvimento backend Java
-**Esforço estimado**: pequeno (1 sessão)
+**Esforï¿½o estimado**: pequeno (1 sessï¿½o)
 
 ### Contexto
 
-Atualmente cada controller captura exceções individualmente com `try/catch` manual:
+Atualmente cada controller captura exceï¿½ï¿½es individualmente com `try/catch` manual:
 
 ```java
-// LogController.java ? padrão atual (repetido em 3 controllers)
+// LogController.java ? padrï¿½o atual (repetido em 3 controllers)
 try {
     ...
 } catch (IllegalArgumentException e) {
@@ -60,11 +60,11 @@ try {
 }
 ```
 
-Isso causa: duplicação de código, respostas de erro com formatos diferentes por controller, ausência de tratamento de erros de validação Bean Validation (`@Valid`), e impossibilidade de centralizar log de exceções.
+Isso causa: duplicaï¿½ï¿½o de cï¿½digo, respostas de erro com formatos diferentes por controller, ausï¿½ncia de tratamento de erros de validaï¿½ï¿½o Bean Validation (`@Valid`), e impossibilidade de centralizar log de exceï¿½ï¿½es.
 
 ### Objetivo
 
-Criar um handler global `@RestControllerAdvice` que padronize **todas** as respostas de erro da API, e remover os `try/catch` dos controllers após a criação.
+Criar um handler global `@RestControllerAdvice` que padronize **todas** as respostas de erro da API, e remover os `try/catch` dos controllers apï¿½s a criaï¿½ï¿½o.
 
 ### Arquivos a criar
 
@@ -72,9 +72,9 @@ Criar um handler global `@RestControllerAdvice` que padronize **todas** as respo
 java-api/src/main/java/com/logplatform/
 ??? exception/
     ??? GlobalExceptionHandler.java   ? @RestControllerAdvice
-    ??? ApiErrorResponse.java         ? DTO padrão de erro
-    ??? BusinessException.java        ? exceção de domínio base
-    ??? ResourceNotFoundException.java ? 404 semântico
+    ??? ApiErrorResponse.java         ? DTO padrï¿½o de erro
+    ??? BusinessException.java        ? exceï¿½ï¿½o de domï¿½nio base
+    ??? ResourceNotFoundException.java ? 404 semï¿½ntico
 ```
 
 ### Arquivos a modificar
@@ -82,10 +82,10 @@ java-api/src/main/java/com/logplatform/
 ```
 controller/LogController.java       ? remover try/catch, simplificar para 1 linha
 controller/PredictController.java   ? remover try/catch, simplificar para 1 linha
-controller/StatsController.java     ? sem alteração (não tem try/catch)
+controller/StatsController.java     ? sem alteraï¿½ï¿½o (nï¿½o tem try/catch)
 ```
 
-### Contrato do DTO de erro (não alterar após definido)
+### Contrato do DTO de erro (nï¿½o alterar apï¿½s definido)
 
 ```json
 {
@@ -97,14 +97,14 @@ controller/StatsController.java     ? sem alteração (não tem try/catch)
 }
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
 - [ ] `GET /stats/summary` com banco vazio retorna `200` com dados zerados (comportamento atual preservado)
-- [ ] `POST /logs/upload` com arquivo não-CSV retorna `400` com body no formato `ApiErrorResponse`
-- [ ] `POST /logs/upload` com arquivo válido continua retornando `200` (sem regressão)
-- [ ] `POST /predict/error` com body inválido retorna `400` com mensagem de validação
-- [ ] Nenhum controller contém `try/catch` após o refactor
-- [ ] Testes unitários dos controllers passam sem alteração de lógica
+- [ ] `POST /logs/upload` com arquivo nï¿½o-CSV retorna `400` com body no formato `ApiErrorResponse`
+- [ ] `POST /logs/upload` com arquivo vï¿½lido continua retornando `200` (sem regressï¿½o)
+- [ ] `POST /predict/error` com body invï¿½lido retorna `400` com mensagem de validaï¿½ï¿½o
+- [ ] Nenhum controller contï¿½m `try/catch` apï¿½s o refactor
+- [ ] Testes unitï¿½rios dos controllers passam sem alteraï¿½ï¿½o de lï¿½gica
 
 ---
 
@@ -112,43 +112,43 @@ controller/StatsController.java     ? sem alteração (não tem try/catch)
 
 ## M-02 ? ModelRegistry Centralizado (Python ML)
 
-**Prioridade**: CRÍTICA
+**Prioridade**: CRï¿½TICA
 **Dupla**: Desenvolvimento Python / ML
-**Esforço estimado**: pequeno-médio (1?2 sessões)
+**Esforï¿½o estimado**: pequeno-mï¿½dio (1?2 sessï¿½es)
 
 ### Contexto
 
-O `predict.py` acessa o modelo treinado via importação direta de variável do módulo `train.py`:
+O `predict.py` acessa o modelo treinado via importaï¿½ï¿½o direta de variï¿½vel do mï¿½dulo `train.py`:
 
 ```python
 # predict.py ? problema atual
-from app.routers.train import classifier_pipeline  # estado global mutável
+from app.routers.train import classifier_pipeline  # estado global mutï¿½vel
 ```
 
-Isso cria acoplamento entre routers, risco de race condition em requisições concorrentes, e impede testes isolados.
+Isso cria acoplamento entre routers, risco de race condition em requisiï¿½ï¿½es concorrentes, e impede testes isolados.
 
-O projeto já possui `app/infrastructure/model_registry.py` ? mas ainda não é usado consistentemente por todos os routers.
+O projeto jï¿½ possui `app/infrastructure/model_registry.py` ? mas ainda nï¿½o ï¿½ usado consistentemente por todos os routers.
 
 ### Objetivo
 
-Garantir que `ModelRegistry` seja a **única fonte de verdade** dos modelos carregados, eliminar todas as importações de variáveis globais entre routers, e validar com testes.
+Garantir que `ModelRegistry` seja a **ï¿½nica fonte de verdade** dos modelos carregados, eliminar todas as importaï¿½ï¿½es de variï¿½veis globais entre routers, e validar com testes.
 
 ### Arquivos a verificar/completar
 
 ```
 python-ml-service/app/
 ??? infrastructure/
-?   ??? model_registry.py       ? verificar implementação atual e completar se necessário
+?   ??? model_registry.py       ? verificar implementaï¿½ï¿½o atual e completar se necessï¿½rio
 ??? routers/
 ?   ??? predict.py              ? substituir import global por ModelRegistry.instance()
 ?   ??? anomaly.py              ? idem
-?   ??? train.py                ? garantir que persiste modelos via registry após treino
+?   ??? train.py                ? garantir que persiste modelos via registry apï¿½s treino
 ```
 
-### Padrão esperado após o módulo
+### Padrï¿½o esperado apï¿½s o mï¿½dulo
 
 ```python
-# predict.py ? padrão correto
+# predict.py ? padrï¿½o correto
 from app.infrastructure.model_registry import ModelRegistry
 
 @router.post("/predict/error", response_model=ErrorPredictionResponse)
@@ -156,17 +156,17 @@ async def predict_error(request: ErrorPredictionRequest):
     registry = ModelRegistry.instance()
     classifier = registry.get_classifier()
     if classifier is None:
-        raise HTTPException(status_code=503, detail="Modelo não treinado.")
+        raise HTTPException(status_code=503, detail="Modelo nï¿½o treinado.")
     ...
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] Nenhum router importa variáveis diretamente de outro router
+- [ ] Nenhum router importa variï¿½veis diretamente de outro router
 - [ ] `POST /predict/error` sem modelo treinado retorna `503` com mensagem clara
 - [ ] `POST /train` seguido de `POST /predict/error` funciona corretamente
-- [ ] `ModelRegistry` é singleton (não recria instância a cada request)
-- [ ] Testes em `test_predict.py` não precisam mais do `fixture` que altera `train.classifier_pipeline` diretamente
+- [ ] `ModelRegistry` ï¿½ singleton (nï¿½o recria instï¿½ncia a cada request)
+- [ ] Testes em `test_predict.py` nï¿½o precisam mais do `fixture` que altera `train.classifier_pipeline` diretamente
 
 ---
 
@@ -176,16 +176,16 @@ async def predict_error(request: ErrorPredictionRequest):
 
 **Prioridade**: ALTA
 **Dupla**: Desenvolvimento backend Java
-**Pré-requisito**: M-01 concluído
-**Esforço estimado**: médio (2 sessões)
+**Prï¿½-requisito**: M-01 concluï¿½do
+**Esforï¿½o estimado**: mï¿½dio (2 sessï¿½es)
 
 ### Contexto
 
-Atualmente a conversão entre `WebLog` (entity JPA) e DTOs pode estar ocorrendo dentro dos services ou de forma inline. Não existe camada de mapper explícita, o que viola SRP e acopla o contrato de API ao modelo de banco.
+Atualmente a conversï¿½o entre `WebLog` (entity JPA) e DTOs pode estar ocorrendo dentro dos services ou de forma inline. Nï¿½o existe camada de mapper explï¿½cita, o que viola SRP e acopla o contrato de API ao modelo de banco.
 
 ### Objetivo
 
-Criar mappers dedicados para cada entidade, desacoplando a evolução do schema do banco da evolução dos contratos de API.
+Criar mappers dedicados para cada entidade, desacoplando a evoluï¿½ï¿½o do schema do banco da evoluï¿½ï¿½o dos contratos de API.
 
 ### Arquivos a criar
 
@@ -196,9 +196,9 @@ java-api/src/main/java/com/logplatform/
     ??? PredictionMapper.java     ? Prediction ? PredictionResult ? DTO
 ```
 
-### Convenção do mapper
+### Convenï¿½ï¿½o do mapper
 
-Mappers são classes `@Component` com métodos estáticos ou de instância. **Não usar MapStruct neste momento** para não adicionar dependência desnecessária ? implementar manualmente seguindo o padrão existente do projeto.
+Mappers sï¿½o classes `@Component` com mï¿½todos estï¿½ticos ou de instï¿½ncia. **Nï¿½o usar MapStruct neste momento** para nï¿½o adicionar dependï¿½ncia desnecessï¿½ria ? implementar manualmente seguindo o padrï¿½o existente do projeto.
 
 ```java
 @Component
@@ -212,12 +212,12 @@ public class WebLogMapper {
 }
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] `LogIngestionService` não manipula campos de `WebLog` diretamente em lógica de negócio
-- [ ] `StatisticsService` não retorna campos de entity JPA nos DTOs de resposta
-- [ ] Mappers possuem testes unitários com casos de campo nulo
-- [ ] Nenhum campo de `WebLog` (ex: `createdAt` interno) vaza para DTOs de resposta pública
+- [ ] `LogIngestionService` nï¿½o manipula campos de `WebLog` diretamente em lï¿½gica de negï¿½cio
+- [ ] `StatisticsService` nï¿½o retorna campos de entity JPA nos DTOs de resposta
+- [ ] Mappers possuem testes unitï¿½rios com casos de campo nulo
+- [ ] Nenhum campo de `WebLog` (ex: `createdAt` interno) vaza para DTOs de resposta pï¿½blica
 
 ---
 
@@ -226,28 +226,28 @@ public class WebLogMapper {
 ## M-04 ? CORS Restrito + Isolamento de Rede (Infra / Python)
 
 **Prioridade**: ALTA
-**Dupla**: Infraestrutura / segurança
-**Esforço estimado**: pequeno (1 sessão)
+**Dupla**: Infraestrutura / seguranï¿½a
+**Esforï¿½o estimado**: pequeno (1 sessï¿½o)
 
 ### Contexto
 
-O Python ML Service tem CORS aberto (`allow_origins=["*"]`) e não possui autenticação. Em produção, o serviço deve ser acessível **apenas** pela Java API dentro da rede Docker.
+O Python ML Service tem CORS aberto (`allow_origins=["*"]`) e nï¿½o possui autenticaï¿½ï¿½o. Em produï¿½ï¿½o, o serviï¿½o deve ser acessï¿½vel **apenas** pela Java API dentro da rede Docker.
 
 ### Objetivo
 
 1. Restringir CORS no Python para aceitar apenas origens conhecidas
-2. Garantir que o serviço Python não seja exposto publicamente no `docker-compose.yml`
-3. Adicionar validação de `X-Internal-Request` header para bloquear chamadas diretas externas
+2. Garantir que o serviï¿½o Python nï¿½o seja exposto publicamente no `docker-compose.yml`
+3. Adicionar validaï¿½ï¿½o de `X-Internal-Request` header para bloquear chamadas diretas externas
 
 ### Arquivos a modificar
 
 ```
-python-ml-service/app/main.py        ? ajustar allow_origins para variável de ambiente
+python-ml-service/app/main.py        ? ajustar allow_origins para variï¿½vel de ambiente
 python-ml-service/app/config.py      ? adicionar CORS_ORIGINS: list[str]
-docker-compose.yml                   ? remover bind 0.0.0.0 do python-ml (porta só interna)
+docker-compose.yml                   ? remover bind 0.0.0.0 do python-ml (porta sï¿½ interna)
 ```
 
-### Configuração esperada
+### Configuraï¿½ï¿½o esperada
 
 ```python
 # config.py
@@ -261,34 +261,34 @@ CORS_ORIGINS: list[str] = Field(
 # main.py
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,  # não mais ["*"]
+    allow_origins=settings.CORS_ORIGINS,  # nï¿½o mais ["*"]
     allow_credentials=True,
     allow_methods=["POST", "GET"],
     allow_headers=["*"],
 )
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] `docker compose up` sobe todos os serviços sem erro
+- [ ] `docker compose up` sobe todos os serviï¿½os sem erro
 - [ ] Java API consegue chamar `POST /predict/error` no Python normalmente
-- [ ] Porta `8000` não está vinculada a `0.0.0.0` no ambiente de produção (apenas interna Docker)
-- [ ] Variável `CORS_ORIGINS` sobrepõe o default via variável de ambiente no `docker-compose.yml`
+- [ ] Porta `8000` nï¿½o estï¿½ vinculada a `0.0.0.0` no ambiente de produï¿½ï¿½o (apenas interna Docker)
+- [ ] Variï¿½vel `CORS_ORIGINS` sobrepï¿½e o default via variï¿½vel de ambiente no `docker-compose.yml`
 
 ---
 
 ---
 
-## M-05 ? Paginação de Logs e Predições (Java API)
+## M-05 ? Paginaï¿½ï¿½o de Logs e Prediï¿½ï¿½es (Java API)
 
 **Prioridade**: ALTA
 **Dupla**: Desenvolvimento backend Java
-**Pré-requisito**: M-01, M-03
-**Esforço estimado**: médio (2 sessões)
+**Prï¿½-requisito**: M-01, M-03
+**Esforï¿½o estimado**: mï¿½dio (2 sessï¿½es)
 
 ### Contexto
 
-Não há endpoint para listar logs ou histórico de predições com paginação. O `StatisticsService` faz `webLogRepository.count()` e queries de agregação ? sem risco de OOM. Mas futuras queries de listagem sem paginação representam risco real.
+Nï¿½o hï¿½ endpoint para listar logs ou histï¿½rico de prediï¿½ï¿½es com paginaï¿½ï¿½o. O `StatisticsService` faz `webLogRepository.count()` e queries de agregaï¿½ï¿½o ? sem risco de OOM. Mas futuras queries de listagem sem paginaï¿½ï¿½o representam risco real.
 
 ### Objetivo
 
@@ -299,9 +299,9 @@ Criar endpoints de listagem paginada para `WebLog` e `Prediction`, usando `Pagea
 ```
 controller/LogQueryController.java      ? GET /logs?page=0&size=20&sort=timestamp,desc
 controller/PredictionQueryController.java ? GET /predictions?page=0&size=20
-dto/PagedResponse.java                   ? wrapper genérico de paginação
-dto/WebLogResponse.java                  ? resposta pública de um log (sem createdAt interno)
-dto/PredictionResponse.java              ? resposta pública de uma predição
+dto/PagedResponse.java                   ? wrapper genï¿½rico de paginaï¿½ï¿½o
+dto/WebLogResponse.java                  ? resposta pï¿½blica de um log (sem createdAt interno)
+dto/PredictionResponse.java              ? resposta pï¿½blica de uma prediï¿½ï¿½o
 ```
 
 ### Arquivos a modificar
@@ -328,13 +328,13 @@ GET /logs?page=0&size=20&sort=timestamp,desc&method=GET&statusCode=500
 }
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] `GET /logs` sem parâmetros retorna página 0 com 20 itens
-- [ ] `GET /logs?size=200` é rejeitado com `400` (size máximo = 100)
+- [ ] `GET /logs` sem parï¿½metros retorna pï¿½gina 0 com 20 itens
+- [ ] `GET /logs?size=200` ï¿½ rejeitado com `400` (size mï¿½ximo = 100)
 - [ ] Filtro por `method` e `statusCode` funciona corretamente
-- [ ] `GET /predictions?page=1&size=10` retorna a segunda página
-- [ ] Nenhuma query carrega todos os registros em memória
+- [ ] `GET /predictions?page=1&size=10` retorna a segunda pï¿½gina
+- [ ] Nenhuma query carrega todos os registros em memï¿½ria
 - [ ] Endpoint documentado no Swagger com exemplos
 
 ---
@@ -343,29 +343,29 @@ GET /logs?page=0&size=20&sort=timestamp,desc&method=GET&statusCode=500
 
 ## M-06 ? Soft Delete nas Entidades (Java API)
 
-**Prioridade**: MÉDIA
+**Prioridade**: Mï¿½DIA
 **Dupla**: Desenvolvimento backend Java
-**Pré-requisito**: M-03
-**Esforço estimado**: pequeno (1 sessão)
+**Prï¿½-requisito**: M-03
+**Esforï¿½o estimado**: pequeno (1 sessï¿½o)
 
 ### Contexto
 
-`WebLog` e `Prediction` não possuem campo de deleção lógica. Qualquer `DELETE` remove o dado fisicamente, comprometendo auditoria.
+`WebLog` e `Prediction` nï¿½o possuem campo de deleï¿½ï¿½o lï¿½gica. Qualquer `DELETE` remove o dado fisicamente, comprometendo auditoria.
 
 ### Objetivo
 
-Adicionar `deletedAt` e `@SQLRestriction` (Hibernate 6) para que queries automáticas do Spring Data excluam registros deletados logicamente.
+Adicionar `deletedAt` e `@SQLRestriction` (Hibernate 6) para que queries automï¿½ticas do Spring Data excluam registros deletados logicamente.
 
 ### Arquivos a modificar
 
 ```
 entity/WebLog.java          ? adicionar LocalDateTime deletedAt
 entity/Prediction.java      ? idem
-repository/WebLogRepository.java     ? adicionar deleteById lógico
+repository/WebLogRepository.java     ? adicionar deleteById lï¿½gico
 repository/PredictionRepository.java ? idem
 ```
 
-### Migration SQL necessária
+### Migration SQL necessï¿½ria
 
 ```sql
 -- Adicionar em postgres/migrations/V2__add_soft_delete.sql
@@ -373,7 +373,7 @@ ALTER TABLE web_logs ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
 ALTER TABLE predictions ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
 ```
 
-### Padrão esperado na entidade
+### Padrï¿½o esperado na entidade
 
 ```java
 @SQLRestriction("deleted_at IS NULL")   // Hibernate 6 ? filtra automaticamente queries
@@ -381,12 +381,12 @@ ALTER TABLE predictions ADD COLUMN deleted_at TIMESTAMP DEFAULT NULL;
 private LocalDateTime deletedAt;
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
 - [ ] `DELETE /logs/{id}` preenche `deleted_at` sem remover o registro
-- [ ] `GET /logs` não retorna registros com `deleted_at` preenchido
-- [ ] Contagem estatística (`/stats/summary`) exclui registros deletados
-- [ ] Registro físico permanece no banco para auditoria
+- [ ] `GET /logs` nï¿½o retorna registros com `deleted_at` preenchido
+- [ ] Contagem estatï¿½stica (`/stats/summary`) exclui registros deletados
+- [ ] Registro fï¿½sico permanece no banco para auditoria
 
 ---
 
@@ -394,20 +394,20 @@ private LocalDateTime deletedAt;
 
 ## M-07 ? Rate Limiting na API Java
 
-**Prioridade**: MÉDIA
-**Dupla**: Segurança / backend Java
-**Pré-requisito**: M-01
-**Esforço estimado**: pequeno-médio (1?2 sessões)
+**Prioridade**: Mï¿½DIA
+**Dupla**: Seguranï¿½a / backend Java
+**Prï¿½-requisito**: M-01
+**Esforï¿½o estimado**: pequeno-mï¿½dio (1?2 sessï¿½es)
 
 ### Contexto
 
-Não há proteção contra abuso de endpoints. Um cliente pode fazer upload de CSV ilimitado ou esgotar o serviço ML com predições em loop.
+Nï¿½o hï¿½ proteï¿½ï¿½o contra abuso de endpoints. Um cliente pode fazer upload de CSV ilimitado ou esgotar o serviï¿½o ML com prediï¿½ï¿½es em loop.
 
 ### Objetivo
 
-Implementar rate limiting por IP usando `Bucket4j` com Redis como backend distribuído (compatível com múltiplas instâncias).
+Implementar rate limiting por IP usando `Bucket4j` com Redis como backend distribuï¿½do (compatï¿½vel com mï¿½ltiplas instï¿½ncias).
 
-### Dependência a adicionar no `pom.xml`
+### Dependï¿½ncia a adicionar no `pom.xml`
 
 ```xml
 <dependency>
@@ -420,13 +420,13 @@ Implementar rate limiting por IP usando `Bucket4j` com Redis como backend distri
     <artifactId>bucket4j-redis</artifactId>
     <version>8.10.1</version>
 </dependency>
-```
+```                 
 
 ### Arquivos a criar
 
 ```
-config/RateLimitConfig.java            ? configuração dos buckets por endpoint
-infrastructure/adapter/RateLimitFilter.java ? OncePerRequestFilter com lógica de bucket
+config/RateLimitConfig.java            ? configuraï¿½ï¿½o dos buckets por endpoint
+infrastructure/adapter/RateLimitFilter.java ? OncePerRequestFilter com lï¿½gica de bucket
 exception/RateLimitExceededException.java   ? 429 Too Many Requests
 ```
 
@@ -439,34 +439,34 @@ exception/RateLimitExceededException.java   ? 429 Too Many Requests
 | `POST /predict/response-time` | 30 req | por IP / minuto |
 | `POST /auth/login` | 10 req | por IP / minuto |
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] 6ª chamada ao `/logs/upload` em 1 minuto retorna `429`
+- [ ] 6ï¿½ chamada ao `/logs/upload` em 1 minuto retorna `429`
 - [ ] Header `X-RateLimit-Remaining` presente em todas as respostas
 - [ ] Header `X-RateLimit-Reset` indica quando o bucket recarrega
-- [ ] Limites configuráveis via `application.yml` (não hardcoded)
-- [ ] Rate limit reseta corretamente após a janela de tempo
+- [ ] Limites configurï¿½veis via `application.yml` (nï¿½o hardcoded)
+- [ ] Rate limit reseta corretamente apï¿½s a janela de tempo
 
 ---
 
 ---
 
-## M-08 ? Filtros Avançados de Estatísticas (Java + Python)
+## M-08 ? Filtros Avanï¿½ados de Estatï¿½sticas (Java + Python)
 
-**Prioridade**: MÉDIA
+**Prioridade**: Mï¿½DIA
 **Dupla**: Desenvolvimento fullstack (Java + Python)
-**Pré-requisito**: M-05
-**Esforço estimado**: médio (2?3 sessões)
+**Prï¿½-requisito**: M-05
+**Esforï¿½o estimado**: mï¿½dio (2?3 sessï¿½es)
 
 ### Contexto
 
-`GET /stats/summary` retorna um resumo estático de **todos** os logs. Não é possível filtrar por período, método HTTP ou faixa de status code.
+`GET /stats/summary` retorna um resumo estï¿½tico de **todos** os logs. Nï¿½o ï¿½ possï¿½vel filtrar por perï¿½odo, mï¿½todo HTTP ou faixa de status code.
 
 ### Objetivo
 
-Adicionar suporte a filtros de período e dimensões nas estatísticas, sem quebrar o endpoint atual.
+Adicionar suporte a filtros de perï¿½odo e dimensï¿½es nas estatï¿½sticas, sem quebrar o endpoint atual.
 
-### Parte Java ? Novo endpoint (não substituir o atual)
+### Parte Java ? Novo endpoint (nï¿½o substituir o atual)
 
 ```
 GET /stats/summary?from=2026-05-01&to=2026-05-14&method=GET
@@ -474,17 +474,17 @@ GET /stats/summary?from=2026-05-01&to=2026-05-14&method=GET
 
 Arquivos a criar/modificar:
 ```
-dto/StatsFilterRequest.java         ? parâmetros de filtro (query params)
+dto/StatsFilterRequest.java         ? parï¿½metros de filtro (query params)
 dto/StatsSummary.java               ? adicionar campo period (opcional)
 repository/WebLogRepository.java    ? queries JPQL com filtros opcionais
 service/StatisticsService.java      ? overload de computeSummary(StatsFilterRequest)
 ```
 
-### Parte Python ? Estatísticas por segmento
+### Parte Python ? Estatï¿½sticas por segmento
 
 ```
-GET /stats/by-hour         ? distribuição por hora do dia
-GET /stats/by-method       ? agrupamento por método HTTP
+GET /stats/by-hour         ? distribuiï¿½ï¿½o por hora do dia
+GET /stats/by-method       ? agrupamento por mï¿½todo HTTP
 GET /stats/by-status-class ? 2xx, 3xx, 4xx, 5xx
 ```
 
@@ -493,13 +493,13 @@ Arquivos a criar:
 python-ml-service/app/routers/stats.py    ? novo router
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] `GET /stats/summary` sem filtro continua funcionando (sem regressão)
-- [ ] `GET /stats/summary?from=2026-05-01&to=2026-05-14` retorna apenas dados do período
+- [ ] `GET /stats/summary` sem filtro continua funcionando (sem regressï¿½o)
+- [ ] `GET /stats/summary?from=2026-05-01&to=2026-05-14` retorna apenas dados do perï¿½odo
 - [ ] `GET /stats/summary?method=POST` filtra corretamente
-- [ ] Cache Redis invalida quando filtros são diferentes (chave inclui parâmetros)
-- [ ] Python retorna distribuição por hora do dia corretamente
+- [ ] Cache Redis invalida quando filtros sï¿½o diferentes (chave inclui parï¿½metros)
+- [ ] Python retorna distribuiï¿½ï¿½o por hora do dia corretamente
 
 ---
 
@@ -507,17 +507,17 @@ python-ml-service/app/routers/stats.py    ? novo router
 
 ## M-09 ? Health Checks Detalhados (Infra / Java)
 
-**Prioridade**: MÉDIA
+**Prioridade**: Mï¿½DIA
 **Dupla**: Infraestrutura / SRE
-**Esforço estimado**: pequeno (1 sessão)
+**Esforï¿½o estimado**: pequeno (1 sessï¿½o)
 
 ### Contexto
 
-`/actuator/health` retorna `{"status": "UP"}` genérico. Não indica saúde individual de dependências (PostgreSQL, Redis, Kafka, Python ML).
+`/actuator/health` retorna `{"status": "UP"}` genï¿½rico. Nï¿½o indica saï¿½de individual de dependï¿½ncias (PostgreSQL, Redis, Kafka, Python ML).
 
 ### Objetivo
 
-Criar health indicators customizados para cada dependência, expondo um endpoint rico que o Grafana e o Prometheus possam usar para alertas de degradação parcial.
+Criar health indicators customizados para cada dependï¿½ncia, expondo um endpoint rico que o Grafana e o Prometheus possam usar para alertas de degradaï¿½ï¿½o parcial.
 
 ### Arquivos a criar
 
@@ -525,7 +525,7 @@ Criar health indicators customizados para cada dependência, expondo um endpoint 
 config/HealthConfig.java                         ? registrar beans de health
 infrastructure/health/
     ??? MlServiceHealthIndicator.java            ? chama GET /health do Python
-    ??? KafkaHealthIndicator.java                ? verifica conexão com broker
+    ??? KafkaHealthIndicator.java                ? verifica conexï¿½o com broker
     ??? RedisHealthIndicator.java                ? ping Redis
 ```
 
@@ -546,31 +546,31 @@ GET /actuator/health
 }
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] Quando Python ML está down, `mlService.status` é `DOWN` mas `overall.status` é `DEGRADED` (não `DOWN`)
-- [ ] Quando Kafka está down, o serviço Java continua funcionando com `kafka.status: DOWN`
-- [ ] Endpoint documentado e acessível sem autenticação
-- [ ] Timeout de verificação do Python ML: máximo 2s para não travar o health check
-
----
+- [ ] Quando Python ML estï¿½ down, `mlService.status` ï¿½ `DOWN` mas `overall.status` ï¿½ `DEGRADED` (nï¿½o `DOWN`)
+- [ ] Quando Kafka estï¿½ down, o serviï¿½o Java continua funcionando com `kafka.status: DOWN`
+- [ ] Endpoint documentado e acessï¿½vel sem autenticaï¿½ï¿½o
+- [ ] Timeout de verificaï¿½ï¿½o do Python ML: mï¿½ximo 2s para nï¿½o travar o health check
 
 ---
 
-## M-10 ? Testes de Integração Java (Testcontainers)
+---
+
+## M-10 ? Testes de Integraï¿½ï¿½o Java (Testcontainers)
 
 **Prioridade**: ALTA
 **Dupla**: Qualidade / backend Java
-**Pré-requisito**: M-01, M-03
-**Esforço estimado**: médio-grande (2?3 sessões)
+**Prï¿½-requisito**: M-01, M-03
+**Esforï¿½o estimado**: mï¿½dio-grande (2?3 sessï¿½es)
 
 ### Contexto
 
-Existem testes de controller com `@WebMvcTest` mas sem banco real. O `IntegrationTest.java` existe mas não está completo. Não há testes que verifiquem o fluxo completo: upload CSV ? salvar banco ? consultar estatísticas.
+Existem testes de controller com `@WebMvcTest` mas sem banco real. O `IntegrationTest.java` existe mas nï¿½o estï¿½ completo. Nï¿½o hï¿½ testes que verifiquem o fluxo completo: upload CSV ? salvar banco ? consultar estatï¿½sticas.
 
 ### Objetivo
 
-Criar testes de integração com Testcontainers (PostgreSQL + Redis) que cubram os fluxos críticos end-to-end na camada de API Java.
+Criar testes de integraï¿½ï¿½o com Testcontainers (PostgreSQL + Redis) que cubram os fluxos crï¿½ticos end-to-end na camada de API Java.
 
 ### Arquivos a criar
 
@@ -578,19 +578,19 @@ Criar testes de integração com Testcontainers (PostgreSQL + Redis) que cubram os
 src/test/java/com/logplatform/
 ??? integration/
 ?   ??? LogIngestionIntegrationTest.java    ? upload CSV ? verifica banco
-?   ??? StatisticsIntegrationTest.java      ? ingestão ? computeSummary()
-?   ??? PredictionAuditIntegrationTest.java ? predição salva no banco
+?   ??? StatisticsIntegrationTest.java      ? ingestï¿½o ? computeSummary()
+?   ??? PredictionAuditIntegrationTest.java ? prediï¿½ï¿½o salva no banco
 ??? fixture/
 ?   ??? WebLogFixture.java                 ? factory de objetos de teste
-?   ??? CsvFixture.java                    ? CSVs válidos e inválidos para teste
+?   ??? CsvFixture.java                    ? CSVs vï¿½lidos e invï¿½lidos para teste
 ??? config/
     ??? TestContainersConfig.java           ? @SpringBootTest + Testcontainers
 ```
 
-### Dependências já presentes no `pom.xml`
+### Dependï¿½ncias jï¿½ presentes no `pom.xml`
 
 ```xml
-<!-- testcontainers.version=1.19.5 já declarada no pom.xml -->
+<!-- testcontainers.version=1.19.5 jï¿½ declarada no pom.xml -->
 <dependency>
     <groupId>org.testcontainers</groupId>
     <artifactId>postgresql</artifactId>
@@ -598,32 +598,32 @@ src/test/java/com/logplatform/
 </dependency>
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] `mvn test` executa todos os testes de integração sem banco local instalado
+- [ ] `mvn test` executa todos os testes de integraï¿½ï¿½o sem banco local instalado
 - [ ] Fluxo completo: upload de `data/web_logs.csv` ? `count()` > 0 no banco de teste
-- [ ] `computeSummary()` após ingestão retorna `totalRecords > 0`
-- [ ] Upload de arquivo não-CSV retorna `400` via integração real
+- [ ] `computeSummary()` apï¿½s ingestï¿½o retorna `totalRecords > 0`
+- [ ] Upload de arquivo nï¿½o-CSV retorna `400` via integraï¿½ï¿½o real
 - [ ] Cobertura de linha dos services >= 70% (JaCoCo)
 
 ---
 
 ---
 
-## M-11 ? Cobertura de Testes Python (Routers Críticos)
+## M-11 ? Cobertura de Testes Python (Routers Crï¿½ticos)
 
 **Prioridade**: ALTA
 **Dupla**: Qualidade / Python ML
-**Pré-requisito**: M-02
-**Esforço estimado**: médio (2 sessões)
+**Prï¿½-requisito**: M-02
+**Esforï¿½o estimado**: mï¿½dio (2 sessï¿½es)
 
 ### Contexto
 
-Existem `test_predict.py`, `test_anomaly.py` e `test_pipeline.py`, mas os testes dependem de importar `train.classifier_pipeline` diretamente (estado global). Após M-02, os testes precisam ser adaptados. Também não há testes para os routers `monitor.py` e `websocket.py`.
+Existem `test_predict.py`, `test_anomaly.py` e `test_pipeline.py`, mas os testes dependem de importar `train.classifier_pipeline` diretamente (estado global). Apï¿½s M-02, os testes precisam ser adaptados. Tambï¿½m nï¿½o hï¿½ testes para os routers `monitor.py` e `websocket.py`.
 
 ### Objetivo
 
-Adaptar testes existentes para usar `ModelRegistry`, adicionar testes para `monitor.py` e garantir cobertura >= 80% nos routers críticos.
+Adaptar testes existentes para usar `ModelRegistry`, adicionar testes para `monitor.py` e garantir cobertura >= 80% nos routers crï¿½ticos.
 
 ### Arquivos a criar/modificar
 
@@ -637,7 +637,7 @@ python-ml-service/tests/
 ??? conftest.py           ? NOVO: fixtures compartilhadas (modelos treinados, DB mock)
 ```
 
-### Padrão de fixture esperado
+### Padrï¿½o de fixture esperado
 
 ```python
 # conftest.py
@@ -650,11 +650,11 @@ def trained_registry():
     return registry
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
 - [ ] `pytest tests/ -v` executa sem acessar banco real (mocks de DB)
 - [ ] Nenhum teste acessa `train.classifier_pipeline` diretamente
-- [ ] `test_monitor.py` testa `GET /monitor/drift` com dados de referência e dados atuais
+- [ ] `test_monitor.py` testa `GET /monitor/drift` com dados de referï¿½ncia e dados atuais
 - [ ] Cobertura >= 80% nos routers `predict.py`, `train.py` e `anomaly.py`
 - [ ] `pytest --cov=app tests/` reporta cobertura
 
@@ -662,26 +662,26 @@ def trained_registry():
 
 ---
 
-## M-12 ? Endpoint de Histórico de Predições (Java API)
+## M-12 ? Endpoint de Histï¿½rico de Prediï¿½ï¿½es (Java API)
 
 **Prioridade**: BAIXA
 **Dupla**: Desenvolvimento backend Java
-**Pré-requisito**: M-05
-**Esforço estimado**: pequeno (1 sessão)
+**Prï¿½-requisito**: M-05
+**Esforï¿½o estimado**: pequeno (1 sessï¿½o)
 
 ### Contexto
 
-A tabela `predictions` já existe no banco com `input_data` (JSONB) e `result` (JSONB), e o `PredictionService` já salva cada predição. Não há endpoint para consultar esse histórico.
+A tabela `predictions` jï¿½ existe no banco com `input_data` (JSONB) e `result` (JSONB), e o `PredictionService` jï¿½ salva cada prediï¿½ï¿½o. Nï¿½o hï¿½ endpoint para consultar esse histï¿½rico.
 
 ### Objetivo
 
-Expor o histórico de predições com paginação e filtro por tipo (`error` / `response-time`).
+Expor o histï¿½rico de prediï¿½ï¿½es com paginaï¿½ï¿½o e filtro por tipo (`error` / `response-time`).
 
 ### Arquivos a criar
 
 ```
 controller/PredictionQueryController.java   ? GET /predictions
-dto/PredictionResponse.java                 ? resposta pública (sem dados sensíveis internos)
+dto/PredictionResponse.java                 ? resposta pï¿½blica (sem dados sensï¿½veis internos)
 ```
 
 ### Contrato esperado
@@ -708,34 +708,34 @@ GET /predictions?type=error&page=0&size=20
 }
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
 - [ ] `GET /predictions` retorna lista paginada
-- [ ] Filtro `?type=error` retorna apenas predições de erro
-- [ ] `inputData` e `result` são desserializados corretamente do JSONB
-- [ ] Endpoint requer autenticação JWT
+- [ ] Filtro `?type=error` retorna apenas prediï¿½ï¿½es de erro
+- [ ] `inputData` e `result` sï¿½o desserializados corretamente do JSONB
+- [ ] Endpoint requer autenticaï¿½ï¿½o JWT
 - [ ] Documentado no Swagger com exemplos de resposta
 
 ---
 
 ---
 
-## M-13 ? Re-treino Automático Agendado (Python ML)
+## M-13 ? Re-treino Automï¿½tico Agendado (Python ML)
 
 **Prioridade**: BAIXA
 **Dupla**: ML Engineering / Python
-**Pré-requisito**: M-02
-**Esforço estimado**: médio (2 sessões)
+**Prï¿½-requisito**: M-02
+**Esforï¿½o estimado**: mï¿½dio (2 sessï¿½es)
 
 ### Contexto
 
-O `scheduler.py` existe mas não está integrado ao pipeline de re-treino. O modelo só é retreinado quando alguém chama `POST /train` manualmente.
+O `scheduler.py` existe mas nï¿½o estï¿½ integrado ao pipeline de re-treino. O modelo sï¿½ ï¿½ retreinado quando alguï¿½m chama `POST /train` manualmente.
 
 ### Objetivo
 
 Configurar o scheduler para disparar `POST /train` automaticamente quando:
-1. O volume de novos dados desde o último treino ultrapassar um threshold configurável
-2. O drift detectado pelo Evidently AI ultrapassar um score configurável
+1. O volume de novos dados desde o ï¿½ltimo treino ultrapassar um threshold configurï¿½vel
+2. O drift detectado pelo Evidently AI ultrapassar um score configurï¿½vel
 
 ### Arquivos a modificar/criar
 
@@ -743,15 +743,15 @@ Configurar o scheduler para disparar `POST /train` automaticamente quando:
 python-ml-service/app/
 ??? scheduler.py                        ? completar com APScheduler jobs
 ??? infrastructure/
-?   ??? retrain_trigger.py              ? lógica de decisão de re-treino
+?   ??? retrain_trigger.py              ? lï¿½gica de decisï¿½o de re-treino
 ??? config.py                           ? RETRAIN_THRESHOLD_RECORDS, DRIFT_THRESHOLD_SCORE
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] Scheduler inicia junto com a aplicação FastAPI (via `lifespan`)
-- [ ] Verificação de threshold acontece a cada N minutos (configurável)
-- [ ] Re-treino não bloqueia a API durante execução (task assíncrona)
+- [ ] Scheduler inicia junto com a aplicaï¿½ï¿½o FastAPI (via `lifespan`)
+- [ ] Verificaï¿½ï¿½o de threshold acontece a cada N minutos (configurï¿½vel)
+- [ ] Re-treino nï¿½o bloqueia a API durante execuï¿½ï¿½o (task assï¿½ncrona)
 - [ ] Log estruturado registra motivo do re-treino (`"reason": "drift_detected"`)
 - [ ] Re-treino manual via `POST /train` continua funcionando normalmente
 
@@ -763,17 +763,17 @@ python-ml-service/app/
 
 **Prioridade**: BAIXA
 **Dupla**: Fullstack / Python
-**Pré-requisito**: M-02
-**Esforço estimado**: médio (2 sessões)
+**Prï¿½-requisito**: M-02
+**Esforï¿½o estimado**: mï¿½dio (2 sessï¿½es)
 
 ### Contexto
 
-O `websocket.py` existe mas os alertas não são disparados automaticamente quando anomalias são detectadas ou quando o drift ultrapassa thresholds.
+O `websocket.py` existe mas os alertas nï¿½o sï¿½o disparados automaticamente quando anomalias sï¿½o detectadas ou quando o drift ultrapassa thresholds.
 
 ### Objetivo
 
 Fazer o WebSocket emitir alertas em tempo real quando:
-- Uma predição retorna `risk_level == "CRITICAL"`
+- Uma prediï¿½ï¿½o retorna `risk_level == "CRITICAL"`
 - O score de drift ultrapassa `0.3`
 - Um batch de anomalias detecta > 5% de outliers
 
@@ -787,29 +787,29 @@ python-ml-service/app/
 ??? routers/monitor.py      ? publicar alerta quando drift score > threshold
 ```
 
-### Critérios de aceitação
+### Critï¿½rios de aceitaï¿½ï¿½o
 
-- [ ] Cliente WebSocket conectado em `ws://localhost:8000/ws/alerts` recebe mensagem quando predição é CRITICAL
+- [ ] Cliente WebSocket conectado em `ws://localhost:8000/ws/alerts` recebe mensagem quando prediï¿½ï¿½o ï¿½ CRITICAL
 - [ ] Formato da mensagem: `{"type": "alert", "level": "CRITICAL", "source": "predict_error", "timestamp": "...", "detail": {...}}`
-- [ ] Clientes desconectados não causam erro no servidor
-- [ ] WebSocket não bloqueia o pipeline de predição (fire-and-forget)
+- [ ] Clientes desconectados nï¿½o causam erro no servidor
+- [ ] WebSocket nï¿½o bloqueia o pipeline de prediï¿½ï¿½o (fire-and-forget)
 
 ---
 
 ---
 
-## ATRIBUIÇÃO DAS 5 DUPLAS ? 3 SPRINTS PARALELOS
+## ATRIBUIï¿½ï¿½O DAS 5 DUPLAS ? 3 SPRINTS PARALELOS
 
-> Regra: **toda dupla termina o sprint atual antes de avançar para o próximo.**
-> Sprint 1 é a base de todos ? ninguém avança sem ele estar pronto.
+> Regra: **toda dupla termina o sprint atual antes de avanï¿½ar para o prï¿½ximo.**
+> Sprint 1 ï¿½ a base de todos ? ninguï¿½m avanï¿½a sem ele estar pronto.
 
-| Dupla | Sprint 1 ? Fundação (todos fazem) | Sprint 2 ? Construção | Sprint 3 ? Features |
+| Dupla | Sprint 1 ? Fundaï¿½ï¿½o (todos fazem) | Sprint 2 ? Construï¿½ï¿½o | Sprint 3 ? Features |
 |---|---|---|---|
-| **Geovana, Hugo e Lucas ** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-07 Rate Limiting | M-13 Re-treino Automático |
-| **Agenor e Arthur** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-03 Mapper Layer | M-10 Testes Integração Java |
+| **Geovana, Hugo e Lucas ** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-07 Rate Limiting | M-13 Re-treino Automï¿½tico |
+| **Agenor e Arthur** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-03 Mapper Layer | M-10 Testes Integraï¿½ï¿½o Java |
 | **Matheus e Matheus** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-04 CORS + Network | M-14 Alertas WebSocket |
-| **Marcos e João Paulo 
-** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-09 Health Checks + M-06 Soft Delete | M-05 Paginação |
-| **Gabriel e Gabriel ** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-11 Testes Python | M-08 Filtros Estatísticas + M-12 Histórico de Predições |
+| **Marcos e Joï¿½o Paulo 
+** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-09 Health Checks + M-06 Soft Delete | M-05 Paginaï¿½ï¿½o |
+| **Gabriel e Gabriel ** | M-01 GlobalExceptionHandler + M-02 ModelRegistry Python | M-11 Testes Python | M-08 Filtros Estatï¿½sticas + M-12 Histï¿½rico de Prediï¿½ï¿½es |
 
-> Sprint 1 é igual para todas as duplas: as duas entregas base sem as quais nada mais funciona.
+> Sprint 1 ï¿½ igual para todas as duplas: as duas entregas base sem as quais nada mais funciona.

@@ -11,10 +11,10 @@ from app.feature_engineering import (
     get_classification_features,
     get_regression_features,
 )
+from app.infrastructure.model_registry import ModelRegistry
 from app.models.classifier import ClassifierPipeline
 from app.models.regressor import RegressorPipeline
 from app.models.anomaly import AnomalyDetector
-from app.routers import train
 
 
 client = TestClient(app)
@@ -43,28 +43,31 @@ def setup_models():
         X_reg, y_reg, test_size=0.2, random_state=42
     )
 
+    registry = ModelRegistry.instance()
+
     # Train classifier
-    train.classifier_pipeline = ClassifierPipeline()
-    train.classifier_pipeline.train_and_evaluate(
+    classifier_pipeline = ClassifierPipeline()
+    classifier_pipeline.train_and_evaluate(
         X_clf_train, X_clf_test, y_clf_train, y_clf_test
     )
+    registry.register("classifier", classifier_pipeline, {"test": True})
 
     # Train regressor
-    train.regressor_pipeline = RegressorPipeline()
-    train.regressor_pipeline.train_and_evaluate(
+    regressor_pipeline = RegressorPipeline()
+    regressor_pipeline.train_and_evaluate(
         X_reg_train, X_reg_test, y_reg_train, y_reg_test
     )
+    registry.register("regressor", regressor_pipeline, {"test": True})
 
     # Train anomaly detector
-    train.anomaly_detector = AnomalyDetector()
-    train.anomaly_detector.fit(df_feat, clf_features)
+    anomaly_detector = AnomalyDetector()
+    anomaly_detector.fit(df_feat, clf_features)
+    registry.register("anomaly_detector", anomaly_detector, {"test": True})
 
     yield
 
     # Cleanup
-    train.classifier_pipeline = None
-    train.regressor_pipeline = None
-    train.anomaly_detector = None
+    registry.clear()
 
 
 class TestRootEndpoint:

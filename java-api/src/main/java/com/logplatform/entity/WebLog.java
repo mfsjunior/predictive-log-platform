@@ -2,6 +2,7 @@ package com.logplatform.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 
 /**
@@ -12,9 +13,11 @@ import java.time.LocalDateTime;
  *   desta classe no banco de dados.
  * - @Table(name = "web_logs"): Define o nome da tabela física no PostgreSQL onde os 
  *   logs brutos serão armazenados para posterior análise estatística e de ML.
+ * - Soft Delete: deleted_at != null significa registro logicamente deletado (auditoria).
  */
 @Entity // Define que esta classe é uma entidade gerenciada pelo JPA e mapeada para uma tabela
 @Table(name = "web_logs") // Especifica o nome da tabela no banco de dados
+@SQLRestriction("deleted_at IS NULL") // Hibernate 6: Filtra automaticamente registros deletados
 @Getter // Lombok: Gera automaticamente todos os métodos Getters para os campos
 @Setter // Lombok: Gera automaticamente todos os métodos Setters para os campos
 @NoArgsConstructor // Lombok: Gera um construtor vazio (exigido pelo JPA)
@@ -52,6 +55,9 @@ public class WebLog {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     protected void onCreate() {

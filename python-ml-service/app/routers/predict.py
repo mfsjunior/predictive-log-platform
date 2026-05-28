@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.feature_engineering import prepare_single_prediction, get_regression_features
+from app.infrastructure.model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -54,9 +55,10 @@ async def predict_error(request: ErrorPredictionRequest):
 
     Returns error probability and risk level (LOW/MEDIUM/HIGH/CRITICAL).
     """
-    from app.routers.train import classifier_pipeline
+    registry = ModelRegistry.instance()
+    classifier = registry.get("classifier")
 
-    if classifier_pipeline is None or classifier_pipeline.best_model is None:
+    if classifier is None or classifier.best_model is None:
         raise HTTPException(
             status_code=503,
             detail="No trained classifier available. POST /train first."
@@ -72,7 +74,7 @@ async def predict_error(request: ErrorPredictionRequest):
             day_of_week=request.day_of_week,
         )
 
-        result = classifier_pipeline.predict_error_probability(X)
+        result = classifier.predict_error_probability(X)
         inference_ms = (time.time() - start) * 1000
 
         return ErrorPredictionResponse(
@@ -93,9 +95,10 @@ async def predict_response_time(request: ResponseTimePredictionRequest):
 
     Returns predicted value with 95% confidence interval.
     """
-    from app.routers.train import regressor_pipeline
+    registry = ModelRegistry.instance()
+    regressor = registry.get("regressor")
 
-    if regressor_pipeline is None or regressor_pipeline.best_model is None:
+    if regressor is None or regressor.best_model is None:
         raise HTTPException(
             status_code=503,
             detail="No trained regressor available. POST /train first."
@@ -117,7 +120,7 @@ async def predict_response_time(request: ResponseTimePredictionRequest):
         reg_features = get_regression_features()
         X = X_base[reg_features]
 
-        result = regressor_pipeline.predict_response_time(X)
+        result = regressor.predict_response_time(X)
         inference_ms = (time.time() - start) * 1000
 
         return ResponseTimePredictionResponse(

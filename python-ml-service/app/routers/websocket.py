@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Set
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from app.infrastructure.model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +41,8 @@ async def check_and_alert(log_data: dict):
     Check a log entry for anomalies and broadcast alert if detected.
     Called after each log ingestion.
     """
-    from app.routers.train import anomaly_detector
+    registry = ModelRegistry.instance()
+    anomaly_detector = registry.get("anomaly_detector")
     from app.feature_engineering import prepare_single_prediction
 
     if anomaly_detector is None:

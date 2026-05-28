@@ -50,10 +50,9 @@ spring:
         default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
 
 # ML Service
-ml:
-  service:
-    url: ${ML_SERVICE_URL:http://localhost:8000}
-    timeout: 30000
+ml-service:
+  url: ${ML_SERVICE_URL:http://python-ml:8000}
+  timeout: 30000
 
 # Actuator
 management:
@@ -64,6 +63,7 @@ management:
   endpoint:
     health:
       show-details: always
+      show-components: always
   metrics:
     tags:
       application: predictive-log-api

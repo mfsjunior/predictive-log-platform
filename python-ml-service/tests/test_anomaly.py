@@ -11,8 +11,9 @@ from app.feature_engineering import (
     get_classification_features,
     prepare_single_prediction,
 )
+from app.infrastructure.model_registry import ModelRegistry
+from app.models.classifier import ClassifierPipeline
 from app.models.anomaly import AnomalyDetector
-from app.routers import train
 
 
 client = TestClient(app)
@@ -25,8 +26,6 @@ def setup_anomaly_detector():
     df_feat = engineer_features(df)
     features = get_classification_features()
 
-    # Also need classifier for the endpoint to work
-    from app.models.classifier import ClassifierPipeline
     from sklearn.model_selection import train_test_split
 
     X = df_feat[features]
@@ -35,16 +34,19 @@ def setup_anomaly_detector():
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    train.classifier_pipeline = ClassifierPipeline()
-    train.classifier_pipeline.train_and_evaluate(X_train, X_test, y_train, y_test)
+    registry = ModelRegistry.instance()
 
-    train.anomaly_detector = AnomalyDetector()
-    train.anomaly_detector.fit(df_feat, features)
+    classifier_pipeline = ClassifierPipeline()
+    classifier_pipeline.train_and_evaluate(X_train, X_test, y_train, y_test)
+    registry.register("classifier", classifier_pipeline, {"test": True})
+
+    anomaly_detector = AnomalyDetector()
+    anomaly_detector.fit(df_feat, features)
+    registry.register("anomaly_detector", anomaly_detector, {"test": True})
 
     yield
 
-    train.anomaly_detector = None
-    train.classifier_pipeline = None
+    registry.clear()
 
 
 class TestAnomalyDetectorUnit:

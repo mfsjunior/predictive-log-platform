@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS web_logs (
     user_agent      VARCHAR(500),
     ip_address      VARCHAR(45),
     bytes_sent      INTEGER DEFAULT 0,
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP DEFAULT NULL
 );
 
 -- Predictions History Table
@@ -24,7 +25,8 @@ CREATE TABLE IF NOT EXISTS predictions (
     result          JSONB NOT NULL,
     model_version   VARCHAR(100),
     latency_ms      DOUBLE PRECISION,
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at      TIMESTAMP DEFAULT NULL
 );
 
 -- Model Metadata Table
@@ -58,8 +60,10 @@ CREATE TABLE IF NOT EXISTS training_runs (
 CREATE INDEX IF NOT EXISTS idx_web_logs_timestamp ON web_logs(timestamp);
 CREATE INDEX IF NOT EXISTS idx_web_logs_status_code ON web_logs(status_code);
 CREATE INDEX IF NOT EXISTS idx_web_logs_method ON web_logs(method);
+CREATE INDEX IF NOT EXISTS idx_web_logs_deleted ON web_logs(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_predictions_type ON predictions(prediction_type);
 CREATE INDEX IF NOT EXISTS idx_predictions_created ON predictions(created_at);
+CREATE INDEX IF NOT EXISTS idx_predictions_deleted ON predictions(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_model_metadata_active ON model_metadata(is_active);
 CREATE INDEX idx_training_status ON training_runs(status);
 CREATE INDEX idx_training_started ON training_runs(started_at);

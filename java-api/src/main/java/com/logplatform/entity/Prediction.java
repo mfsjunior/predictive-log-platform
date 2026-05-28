@@ -2,6 +2,7 @@ package com.logplatform.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
 
 /**
@@ -14,10 +15,12 @@ import java.time.LocalDateTime;
  * - Auditoria: Salvar cada predição permite que, no futuro, possamos comparar o
  * que a
  * IA previu com o que realmente aconteceu, ajudando a retreinar o modelo.
+ * - Soft Delete: deleted_at != null significa predição logicamente deletada (preserva histórico).
  */
 @Entity // Define que esta classe é uma entidade gerenciada pelo JPA e mapeada para uma
         // tabela
 @Table(name = "predictions") // Especifica o nome da tabela no banco de dados para auditoria de ML
+@SQLRestriction("deleted_at IS NULL") // Hibernate 6: Filtra automaticamente registros deletados
 @Getter // Lombok: Gera automaticamente todos os métodos Getters para os campos
 @Setter // Lombok: Gera automaticamente todos os métodos Setters para os campos
 @NoArgsConstructor // Lombok: Gera um construtor vazio (exigido pelo JPA)
@@ -47,6 +50,9 @@ public class Prediction {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     protected void onCreate() {

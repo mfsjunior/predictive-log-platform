@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.feature_engineering import prepare_single_prediction
+from app.infrastructure.model_registry import ModelRegistry
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -45,7 +46,8 @@ async def detect_anomaly(request: AnomalyDetectionRequest):
     Uses both Z-score and Isolation Forest for detection.
     Returns combined anomaly score and individual method details.
     """
-    from app.routers.train import anomaly_detector
+    registry = ModelRegistry.instance()
+    anomaly_detector = registry.get("anomaly_detector")
 
     if anomaly_detector is None:
         raise HTTPException(

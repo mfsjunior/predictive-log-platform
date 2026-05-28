@@ -1,10 +1,16 @@
 package com.logplatform.repository;
 
 import com.logplatform.entity.WebLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -37,4 +43,25 @@ public interface WebLogRepository extends JpaRepository<WebLog, Long> {
     List<Double> findAllResponseTimesOrdered();
 
     long countByStatusCodeGreaterThanEqual(int statusCode);
+
+    /**
+     * Soft delete: marca um log como deletado sem remover fisicamente do banco.
+     * Necessário para auditoria e conformidade.
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE WebLog w SET w.deletedAt = :now WHERE w.id = :id AND w.deletedAt IS NULL")
+    void softDeleteById(Long id, LocalDateTime now);
+
+    /**
+     * Soft delete em lote: marca múltiplos logs como deletados.
+     */
+    @Modifying
+    @Transactional
+    @Query("UPDATE WebLog w SET w.deletedAt = :now WHERE w.id IN :ids AND w.deletedAt IS NULL")
+    void softDeleteByIdIn(List<Long> ids, LocalDateTime now);
+
+    @Query("SELECT w FROM WebLog w WHERE (:method IS NULL OR w.method = :method) AND (:statusCode IS NULL OR w.statusCode = :statusCode)")
+    Page<WebLog> findAllByFilters(@Param("method") String method, @Param("statusCode") Integer statusCode, Pageable pageable);
 }
+

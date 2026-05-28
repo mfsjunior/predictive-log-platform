@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.infrastructure.model_registry import ModelRegistry
 from app.routers import train, predict, anomaly, monitor
 from app.routers import websocket as ws_router
 
@@ -72,12 +73,18 @@ async def startup_event():
     classifier_path = os.path.join(settings.MODELS_DIR, "best_classifier.joblib")
     regressor_path = os.path.join(settings.MODELS_DIR, "best_regressor.joblib")
 
+    registry = ModelRegistry.instance()
+
     if os.path.exists(classifier_path):
         try:
             from app.models.classifier import ClassifierPipeline
-            train.classifier_pipeline = ClassifierPipeline()
-            train.classifier_pipeline.best_model = joblib.load(classifier_path)
-            train.classifier_pipeline.best_model_name = "loaded_from_disk"
+            classifier_pipeline = ClassifierPipeline()
+            classifier_pipeline.best_model = joblib.load(classifier_path)
+            classifier_pipeline.best_model_name = "loaded_from_disk"
+            registry.register("classifier", classifier_pipeline, {
+                "version": "loaded_from_disk",
+                "path": classifier_path,
+            })
             logger.info(f"Loaded classifier from {classifier_path}")
         except Exception as e:
             logger.warning(f"Failed to load classifier: {e}")
@@ -85,10 +92,14 @@ async def startup_event():
     if os.path.exists(regressor_path):
         try:
             from app.models.regressor import RegressorPipeline
-            train.regressor_pipeline = RegressorPipeline()
-            train.regressor_pipeline.best_model = joblib.load(regressor_path)
-            train.regressor_pipeline.best_model_name = "loaded_from_disk"
-            train.regressor_pipeline.results["loaded_from_disk"] = {"rmse": 0.0}
+            regressor_pipeline = RegressorPipeline()
+            regressor_pipeline.best_model = joblib.load(regressor_path)
+            regressor_pipeline.best_model_name = "loaded_from_disk"
+            regressor_pipeline.results["loaded_from_disk"] = {"rmse": 0.0}
+            registry.register("regressor", regressor_pipeline, {
+                "version": "loaded_from_disk",
+                "path": regressor_path,
+            })
             logger.info(f"Loaded regressor from {regressor_path}")
         except Exception as e:
             logger.warning(f"Failed to load regressor: {e}")
