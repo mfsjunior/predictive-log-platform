@@ -54,7 +54,10 @@ async def predict_error(request: ErrorPredictionRequest):
 
     Returns error probability and risk level (LOW/MEDIUM/HIGH/CRITICAL).
     """
-    from app.routers.train import classifier_pipeline
+    from app.infrastructure.model_registry import ModelRegistry
+
+    registry = ModelRegistry.instance()
+    classifier_pipeline = registry.get("classifier")
 
     if classifier_pipeline is None or classifier_pipeline.best_model is None:
         raise HTTPException(
@@ -93,7 +96,10 @@ async def predict_response_time(request: ResponseTimePredictionRequest):
 
     Returns predicted value with 95% confidence interval.
     """
-    from app.routers.train import regressor_pipeline
+    from app.infrastructure.model_registry import ModelRegistry
+
+    registry = ModelRegistry.instance()
+    regressor_pipeline = registry.get("regressor")
 
     if regressor_pipeline is None or regressor_pipeline.best_model is None:
         raise HTTPException(

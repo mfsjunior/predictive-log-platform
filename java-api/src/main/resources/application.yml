@@ -54,6 +54,8 @@ ml:
   service:
     url: ${ML_SERVICE_URL:http://localhost:8000}
     timeout: 30000
+    health-path: ${ML_SERVICE_HEALTH_PATH:/health}
+    timeout-ms: ${ML_SERVICE_TIMEOUT_MS:5000}
 
 # Actuator
 management:

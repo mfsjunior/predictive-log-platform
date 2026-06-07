@@ -36,36 +36,19 @@ public class PredictController {
     @Operation(summary = "Predizer probabilidade de erro", description = "Prediz a chance de erro HTTP (4xx/5xx) baseado no método, hora e histórico")
     public ResponseEntity<ErrorPredictionResponse> predictError(
             @Valid @RequestBody ErrorPredictionRequest request) {
-        try {
-            // 1. Chama o serviço de predição (que orquestra cache, auditoria e motor Python)
-            ErrorPredictionResponse response = predictionService.predictError(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            // 2. Trata falhas de comunicação ou erros no motor de ML
-            return ResponseEntity.internalServerError().body(
-                    ErrorPredictionResponse.builder()
-                            .errorProbability(-1)
-                            .riskLevel("UNKNOWN")
-                            .modelUsed("error: " + e.getMessage())
-                            .build());
-        }
+        // Chama o serviço de predição (que orquestra cache, auditoria e motor Python)
+        // Exceções são tratadas automaticamente por GlobalExceptionHandler
+        ErrorPredictionResponse response = predictionService.predictError(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/response-time")
     @Operation(summary = "Predizer tempo de resposta", description = "Prediz o tempo de resposta esperado com intervalo de confiança de 95%")
     public ResponseEntity<ResponseTimePrediction> predictResponseTime(
             @Valid @RequestBody ErrorPredictionRequest request) {
-        try {
-            // 1. Solicita a predição de valor numérico (Regressão) ao motor de IA
-            ResponseTimePrediction response = predictionService.predictResponseTime(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            // 2. Fallback em caso de erro no serviço de ML
-            return ResponseEntity.internalServerError().body(
-                    ResponseTimePrediction.builder()
-                            .predictedResponseTimeMs(-1)
-                            .modelUsed("error: " + e.getMessage())
-                            .build());
-        }
+        // Solicita a predição de valor numérico (Regressão) ao motor de IA
+        // Exceções são tratadas automaticamente por GlobalExceptionHandler
+        ResponseTimePrediction response = predictionService.predictResponseTime(request);
+        return ResponseEntity.ok(response);
     }
 }
