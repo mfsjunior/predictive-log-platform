@@ -8,10 +8,13 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.feature_engineering import prepare_single_prediction, get_regression_features
+from app.infrastructure.model_registry import ModelRegistry  # <-- Importamos o Registry
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# Instanciamos o Registry de forma segura
+registry = ModelRegistry.instance()
 
 class ErrorPredictionRequest(BaseModel):
     method: str = Field(..., description="HTTP method (GET, POST, PUT, DELETE, PATCH)")
@@ -24,13 +27,11 @@ class ErrorPredictionRequest(BaseModel):
         description="Day of the week (0=Monday, 6=Sunday)"
     )
 
-
 class ErrorPredictionResponse(BaseModel):
     error_probability: float
     risk_level: str
     model_used: str | None = None
     inference_time_ms: float | None = None
-
 
 class ResponseTimePredictionRequest(BaseModel):
     method: str = Field(..., description="HTTP method")
@@ -38,7 +39,6 @@ class ResponseTimePredictionRequest(BaseModel):
     historical_avg_response: float = Field(..., gt=0, description="Historical avg response time ms")
     day_of_week: int = Field(default=2, ge=0, le=6)
     is_error: int = Field(default=0, ge=0, le=1, description="Whether the request is an error")
-
 
 class ResponseTimePredictionResponse(BaseModel):
     predicted_response_time_ms: float
@@ -51,10 +51,11 @@ class ResponseTimePredictionResponse(BaseModel):
 async def predict_error(request: ErrorPredictionRequest):
     """
     Predict the probability of an HTTP error (4xx/5xx).
-
     Returns error probability and risk level (LOW/MEDIUM/HIGH/CRITICAL).
     """
-    from app.routers.train import classifier_pipeline
+    
+    # Busca o modelo seguro da memória usando o Registry
+    classifier_pipeline = registry.get("classifier")
 
     if classifier_pipeline is None or classifier_pipeline.best_model is None:
         raise HTTPException(
@@ -90,10 +91,11 @@ async def predict_error(request: ErrorPredictionRequest):
 async def predict_response_time(request: ResponseTimePredictionRequest):
     """
     Predict the expected response time in milliseconds.
-
     Returns predicted value with 95% confidence interval.
     """
-    from app.routers.train import regressor_pipeline
+    
+    # Busca o modelo seguro da memória usando o Registry
+    regressor_pipeline = registry.get("regressor")
 
     if regressor_pipeline is None or regressor_pipeline.best_model is None:
         raise HTTPException(
