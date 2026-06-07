@@ -14,7 +14,6 @@ from app.feature_engineering import (
 from app.models.classifier import ClassifierPipeline
 from app.models.regressor import RegressorPipeline
 from app.models.anomaly import AnomalyDetector
-from app.routers import train
 
 
 client = TestClient(app)
@@ -23,6 +22,10 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def setup_models():
     """Set up trained models for prediction tests."""
+    from app.infrastructure.model_registry import ModelRegistry
+
+    registry = ModelRegistry.instance()
+    
     df = generate_synthetic_dataset(n_records=500, seed=42)
     df_feat = engineer_features(df)
 
@@ -43,28 +46,30 @@ def setup_models():
         X_reg, y_reg, test_size=0.2, random_state=42
     )
 
-    # Train classifier
-    train.classifier_pipeline = ClassifierPipeline()
-    train.classifier_pipeline.train_and_evaluate(
+    # Train classifier and register
+    classifier_pipeline = ClassifierPipeline()
+    classifier_pipeline.train_and_evaluate(
         X_clf_train, X_clf_test, y_clf_train, y_clf_test
     )
+    registry.register("classifier", classifier_pipeline, {"version": "test"})
 
-    # Train regressor
-    train.regressor_pipeline = RegressorPipeline()
-    train.regressor_pipeline.train_and_evaluate(
+    # Train regressor and register
+    regressor_pipeline = RegressorPipeline()
+    regressor_pipeline.train_and_evaluate(
         X_reg_train, X_reg_test, y_reg_train, y_reg_test
     )
+    registry.register("regressor", regressor_pipeline, {"version": "test"})
 
-    # Train anomaly detector
-    train.anomaly_detector = AnomalyDetector()
-    train.anomaly_detector.fit(df_feat, clf_features)
+    # Train anomaly detector and register
+    from app.models.anomaly import AnomalyDetector
+    anomaly_detector = AnomalyDetector()
+    anomaly_detector.fit(df_feat, clf_features)
+    registry.register("anomaly_detector", anomaly_detector, {"version": "test"})
 
     yield
 
     # Cleanup
-    train.classifier_pipeline = None
-    train.regressor_pipeline = None
-    train.anomaly_detector = None
+    registry.clear()
 
 
 class TestRootEndpoint:
