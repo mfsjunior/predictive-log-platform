@@ -31,34 +31,16 @@ public class LogController {
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload CSV log file", description = "Upload a CSV file containing web log entries for ingestion")
     public ResponseEntity<LogUploadResponse> uploadCsv(@RequestParam("file") MultipartFile file) {
-        try {
-            // 1. Delega o processamento pesado do CSV para o Service (Padrão de Camadas)
-            int[] result = logIngestionService.uploadCsv(file);
-            
-            // 2. Monta a resposta de sucesso com o resumo do processamento
-            return ResponseEntity.ok(LogUploadResponse.builder()
-                    .status("success")
-                    .recordsProcessed(result[0])
-                    .recordsFailed(result[1])
-                    .message(String.format("Processado com sucesso: %d registros (%d falhas)", result[0], result[1]))
-                    .build());
-        } catch (IllegalArgumentException e) {
-            // 3. Erro de validação (ex: arquivo vazio ou colunas erradas) -> status 400
-            return ResponseEntity.badRequest().body(LogUploadResponse.builder()
-                    .status("error")
-                    .recordsProcessed(0)
-                    .recordsFailed(0)
-                    .message(e.getMessage())
-                    .build());
-        } catch (Exception e) {
-            // 4. Erros inesperados no servidor -> status 500
-            log.error("CSV upload failed", e);
-            return ResponseEntity.internalServerError().body(LogUploadResponse.builder()
-                    .status("error")
-                    .recordsProcessed(0)
-                    .recordsFailed(0)
-                    .message("Upload failed: " + e.getMessage())
-                    .build());
-        }
+        // 1. Delega o processamento pesado do CSV para o Service (Padrão de Camadas)
+        // Exceções são tratadas automaticamente por GlobalExceptionHandler
+        int[] result = logIngestionService.uploadCsv(file);
+        
+        // 2. Monta a resposta de sucesso com o resumo do processamento
+        return ResponseEntity.ok(LogUploadResponse.builder()
+                .status("success")
+                .recordsProcessed(result[0])
+                .recordsFailed(result[1])
+                .message(String.format("Processado com sucesso: %d registros (%d falhas)", result[0], result[1]))
+                .build());
     }
 }
