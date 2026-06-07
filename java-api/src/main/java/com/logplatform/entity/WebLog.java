@@ -3,6 +3,8 @@ package com.logplatform.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 /**
  * Entidade JPA que representa um registro de log web.
@@ -15,6 +17,8 @@ import java.time.LocalDateTime;
  */
 @Entity // Define que esta classe é uma entidade gerenciada pelo JPA e mapeada para uma tabela
 @Table(name = "web_logs") // Especifica o nome da tabela no banco de dados
+@SQLDelete(sql = "UPDATE web_logs SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
 @Getter // Lombok: Gera automaticamente todos os métodos Getters para os campos
 @Setter // Lombok: Gera automaticamente todos os métodos Setters para os campos
 @NoArgsConstructor // Lombok: Gera um construtor vazio (exigido pelo JPA)
@@ -52,6 +56,9 @@ public class WebLog {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     protected void onCreate() {
