@@ -1,19 +1,15 @@
 package com.logplatform.controller;
 
 import com.logplatform.dto.LogUploadResponse;
-import com.logplatform.service.LogIngestionService;
-import com.logplatform.entity.WebLog;
 import com.logplatform.exception.ResourceNotFoundException;
 import com.logplatform.repository.WebLogRepository;
+import com.logplatform.service.LogIngestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -49,22 +45,6 @@ public class LogController {
                 .recordsFailed(result[1])
                 .message(String.format("Processado com sucesso: %d registros (%d falhas)", result[0], result[1]))
                 .build());
-    }
-
-    @GetMapping
-    @Operation(summary = "List logs", description = "Retrieve a paginated list of logs excluding soft-deleted entries")
-    public ResponseEntity<List<WebLog>> getLogs(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "timestamp,desc") String sort) {
-        String[] sortParts = sort.split(",", 2);
-        String sortField = sortParts[0];
-        Sort.Direction direction = Sort.Direction.DESC;
-        if (sortParts.length > 1) {
-            direction = Sort.Direction.fromString(sortParts[1]);
-        }
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortField));
-        return ResponseEntity.ok(webLogRepository.findAll(pageable).getContent());
     }
 
     @DeleteMapping("/{id}")

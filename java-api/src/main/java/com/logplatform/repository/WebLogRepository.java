@@ -1,6 +1,8 @@
 package com.logplatform.repository;
 
 import com.logplatform.entity.WebLog;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -38,6 +40,13 @@ public interface WebLogRepository extends JpaRepository<WebLog, Long> {
 
     @Query("SELECT w.responseTimeMs FROM WebLog w ORDER BY w.responseTimeMs")
     List<Double> findAllResponseTimesOrdered();
+
+    @Query("SELECT w FROM WebLog w WHERE (:method IS NULL OR w.method = :method) " +
+            "AND (:statusCode IS NULL OR w.statusCode = :statusCode)")
+    Page<WebLog> findAllByMethodAndStatusCode(
+            @Param("method") String method,
+            @Param("statusCode") Integer statusCode,
+            Pageable pageable);
 
     long countByStatusCodeGreaterThanEqual(int statusCode);
 
