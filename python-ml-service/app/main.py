@@ -10,7 +10,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import train, predict, anomaly, monitor
+from app.infrastructure.model_registry import ModelRegistry
+from app.routers import train, predict, anomaly, monitor, retrain
 from app.routers import websocket as ws_router
 
 # Configure logging
@@ -56,6 +57,7 @@ except ImportError:
 
 # Include routers
 app.include_router(train.router, tags=["Training"])
+app.include_router(retrain.router, tags=["Training"])
 app.include_router(predict.router, tags=["Prediction"])
 app.include_router(anomaly.router, tags=["Anomaly Detection"])
 app.include_router(monitor.router, tags=["Monitoring"])
@@ -71,25 +73,34 @@ async def startup_event():
 
     classifier_path = os.path.join(settings.MODELS_DIR, "best_classifier.joblib")
     regressor_path = os.path.join(settings.MODELS_DIR, "best_regressor.joblib")
+    
+    # Instancia o Singleton da nossa memória
+    registry = ModelRegistry.instance()
 
     if os.path.exists(classifier_path):
         try:
             from app.models.classifier import ClassifierPipeline
-            train.classifier_pipeline = ClassifierPipeline()
-            train.classifier_pipeline.best_model = joblib.load(classifier_path)
-            train.classifier_pipeline.best_model_name = "loaded_from_disk"
-            logger.info(f"Loaded classifier from {classifier_path}")
+            pipeline = ClassifierPipeline()
+            pipeline.best_model = joblib.load(classifier_path)
+            pipeline.best_model_name = "loaded_from_disk"
+            
+            # Salva no Registry de forma Thread-Safe!
+            registry.register("classifier", pipeline, {"version": "startup_load"})
+            logger.info(f"Loaded classifier from {classifier_path} into Registry")
         except Exception as e:
             logger.warning(f"Failed to load classifier: {e}")
 
     if os.path.exists(regressor_path):
         try:
             from app.models.regressor import RegressorPipeline
-            train.regressor_pipeline = RegressorPipeline()
-            train.regressor_pipeline.best_model = joblib.load(regressor_path)
-            train.regressor_pipeline.best_model_name = "loaded_from_disk"
-            train.regressor_pipeline.results["loaded_from_disk"] = {"rmse": 0.0}
-            logger.info(f"Loaded regressor from {regressor_path}")
+            pipeline = RegressorPipeline()
+            pipeline.best_model = joblib.load(regressor_path)
+            pipeline.best_model_name = "loaded_from_disk"
+            pipeline.results["loaded_from_disk"] = {"rmse": 0.0}
+            
+            # Salva no Registry de forma Thread-Safe!
+            registry.register("regressor", pipeline, {"version": "startup_load"})
+            logger.info(f"Loaded regressor from {regressor_path} into Registry")
         except Exception as e:
             logger.warning(f"Failed to load regressor: {e}")
 
@@ -123,6 +134,7 @@ async def root():
         "docs": "/docs",
         "endpoints": {
             "training": "POST /train",
+            "retraining": "POST /api/v1/models/retrain",
             "generate_dataset": "POST /generate-dataset",
             "predict_error": "POST /predict/error",
             "predict_response_time": "POST /predict/response-time",
