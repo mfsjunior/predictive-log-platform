@@ -1,18 +1,16 @@
 package com.logplatform.infrastructure.adapter;
 
+import com.logplatform.domain.model.PredictionResult;
 import com.logplatform.domain.port.PredictionPort;
 import com.logplatform.entity.Prediction;
+import com.logplatform.mapper.PredictionMapper;
 import com.logplatform.repository.PredictionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
- * Adaptador de Infraestrutura: Persiste registros de auditoria de predição via JPA.
- * 
- * Teoria para aula:
- * - Auditoria: Salvar o input e o output de cada chamada de ML é fundamental para 
- *   governança e transparência em sistemas de IA.
+ * Adaptador de Infraestrutura: Persiste registros de auditoria de predição via JPA usando Mapper.
  */
 @Component
 @RequiredArgsConstructor
@@ -20,15 +18,12 @@ import org.springframework.stereotype.Component;
 public class JpaPredictionAdapter implements PredictionPort {
 
     private final PredictionRepository predictionRepository;
+    private final PredictionMapper predictionMapper;
 
     @Override
-    public void save(String type, String inputJson, String resultJson) {
+    public void save(PredictionResult domain, Object input) {
         try {
-            Prediction prediction = Prediction.builder()
-                    .predictionType(type)
-                    .inputData(inputJson)
-                    .result(resultJson)
-                    .build();
+            Prediction prediction = predictionMapper.toEntity(domain, input);
             predictionRepository.save(prediction);
         } catch (Exception e) {
             log.warn("Failed to persist prediction audit: {}", e.getMessage());

@@ -106,7 +106,7 @@ async def train_models():
     6. Persist best models
     7. Generate evaluation plots
     """
-    global classifier_pipeline, regressor_pipeline, anomaly_detector
+    
 
     start_time = time.time()
     model_version = datetime.now().strftime("v%Y%m%d_%H%M%S")

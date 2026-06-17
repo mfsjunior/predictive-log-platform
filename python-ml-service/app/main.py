@@ -69,6 +69,9 @@ async def startup_event():
     """Load pre-trained models on startup if available."""
     logger.info("Starting Predictive Log Intelligence ML Service...")
 
+    from app.infrastructure.model_registry import ModelRegistry
+    registry = ModelRegistry.instance()
+
     classifier_path = os.path.join(settings.MODELS_DIR, "best_classifier.joblib")
     regressor_path = os.path.join(settings.MODELS_DIR, "best_regressor.joblib")
 
@@ -78,7 +81,8 @@ async def startup_event():
             train.classifier_pipeline = ClassifierPipeline()
             train.classifier_pipeline.best_model = joblib.load(classifier_path)
             train.classifier_pipeline.best_model_name = "loaded_from_disk"
-            logger.info(f"Loaded classifier from {classifier_path}")
+            registry.register("classifier", train.classifier_pipeline, {"version": "loaded_from_disk"})
+            logger.info(f"Loaded and registered classifier from {classifier_path}")
         except Exception as e:
             logger.warning(f"Failed to load classifier: {e}")
 
@@ -89,7 +93,8 @@ async def startup_event():
             train.regressor_pipeline.best_model = joblib.load(regressor_path)
             train.regressor_pipeline.best_model_name = "loaded_from_disk"
             train.regressor_pipeline.results["loaded_from_disk"] = {"rmse": 0.0}
-            logger.info(f"Loaded regressor from {regressor_path}")
+            registry.register("regressor", train.regressor_pipeline, {"version": "loaded_from_disk"})
+            logger.info(f"Loaded and registered regressor from {regressor_path}")
         except Exception as e:
             logger.warning(f"Failed to load regressor: {e}")
 

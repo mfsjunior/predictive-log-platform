@@ -1,8 +1,10 @@
 package com.logplatform.controller;
 
+import com.logplatform.dto.LoginRequest; // <-- Importando o seu novo DTO
 import com.logplatform.security.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid; // <-- Importando a anotação de validação
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -12,11 +14,10 @@ import java.util.Map;
 
 /**
  * Controller responsável pela Autenticação.
- * 
- * Teoria para aula:
+ * * Teoria para aula:
  * - O Login é o ponto de entrada para obter o "passaporte" (Token JWT).
  * - Verificamos as credenciais (usuário/senha) e, se estiverem corretas, 
- *   assinamos um token digital que o cliente deverá enviar em todas as outras chamadas.
+ * assinamos um token digital que o cliente deverá enviar em todas as outras chamadas.
  * - Bearer Token: É o padrão onde o cliente envia "Authorization: Bearer <token>".
  */
 @RestController
@@ -35,10 +36,11 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Login", description = "Authenticate with username/password and receive a JWT token")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
-        // 1. Obtém o usuário e a senha do corpo da requisição JSON
-        String username = credentials.getOrDefault("username", "");
-        String password = credentials.getOrDefault("password", "");
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) { // <-- A barreira de validação entra aqui!
+        
+        // 1. Obtém o usuário e a senha do corpo da requisição usando a sintaxe do Record
+        String username = request.username();
+        String password = request.password();
 
         // 2. Valida as credenciais contra os valores configurados (ex: application.properties)
         if (adminUsername.equals(username) && adminPassword.equals(password)) {
