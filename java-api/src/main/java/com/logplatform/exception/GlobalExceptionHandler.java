@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.stream.Collectors;
 
@@ -30,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @RestControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+public class GlobalExceptionHandler {
 
     /**
      * Trata exceções de negócio (domínio) com status HTTP customizado.
@@ -62,22 +61,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleValidationException(
             MethodArgumentNotValidException ex,
             WebRequest request) {
-        
+
         String errors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining(", "));
-        
+
         log.warn("Validation failed: {}", errors);
-        
+
         ApiErrorResponse errorResponse = ApiErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation Error",
                 "Invalid request: " + errors,
                 request.getDescription(false).replace("uri=", "")
         );
-        
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
