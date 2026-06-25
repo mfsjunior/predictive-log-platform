@@ -33,7 +33,7 @@ public class LogController {
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload CSV log file", description = "Upload a CSV file containing web log entries for ingestion")
-    public ResponseEntity<LogUploadResponse> uploadCsv(@RequestParam("file") MultipartFile file) throws java.io.IOException {
+    public ResponseEntity<LogUploadResponse> uploadCsv(@RequestParam("file") MultipartFile file) {
         // 1. Delega o processamento pesado do CSV para o Service (Padrão de Camadas)
         // Exceções são tratadas automaticamente por GlobalExceptionHandler
         int[] result = logIngestionService.uploadCsv(file);
