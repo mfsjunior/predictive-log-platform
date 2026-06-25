@@ -12,7 +12,6 @@ from app.feature_engineering import (
     prepare_single_prediction,
 )
 from app.models.anomaly import AnomalyDetector
-from app.routers import train
 
 
 client = TestClient(app)
@@ -21,6 +20,10 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def setup_anomaly_detector():
     """Set up trained anomaly detector."""
+    from app.infrastructure.model_registry import ModelRegistry
+
+    registry = ModelRegistry.instance()
+    
     df = generate_synthetic_dataset(n_records=500, seed=42)
     df_feat = engineer_features(df)
     features = get_classification_features()
@@ -35,16 +38,17 @@ def setup_anomaly_detector():
         X, y, test_size=0.2, random_state=42, stratify=y
     )
 
-    train.classifier_pipeline = ClassifierPipeline()
-    train.classifier_pipeline.train_and_evaluate(X_train, X_test, y_train, y_test)
+    classifier = ClassifierPipeline()
+    classifier.train_and_evaluate(X_train, X_test, y_train, y_test)
+    registry.register("classifier", classifier, {"version": "test"})
 
-    train.anomaly_detector = AnomalyDetector()
-    train.anomaly_detector.fit(df_feat, features)
+    anomaly_detector = AnomalyDetector()
+    anomaly_detector.fit(df_feat, features)
+    registry.register("anomaly_detector", anomaly_detector, {"version": "test"})
 
     yield
 
-    train.anomaly_detector = None
-    train.classifier_pipeline = None
+    registry.clear()
 
 
 class TestAnomalyDetectorUnit:

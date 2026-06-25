@@ -1,6 +1,8 @@
 package com.logplatform.controller;
 
 import com.logplatform.dto.LogUploadResponse;
+import com.logplatform.exception.ResourceNotFoundException;
+import com.logplatform.repository.WebLogRepository;
 import com.logplatform.service.LogIngestionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,38 +29,31 @@ import org.springframework.web.multipart.MultipartFile;
 public class LogController {
 
     private final LogIngestionService logIngestionService;
+    private final WebLogRepository webLogRepository;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload CSV log file", description = "Upload a CSV file containing web log entries for ingestion")
     public ResponseEntity<LogUploadResponse> uploadCsv(@RequestParam("file") MultipartFile file) {
-        try {
-            // 1. Delega o processamento pesado do CSV para o Service (Padrão de Camadas)
-            int[] result = logIngestionService.uploadCsv(file);
-            
-            // 2. Monta a resposta de sucesso com o resumo do processamento
-            return ResponseEntity.ok(LogUploadResponse.builder()
-                    .status("success")
-                    .recordsProcessed(result[0])
-                    .recordsFailed(result[1])
-                    .message(String.format("Processado com sucesso: %d registros (%d falhas)", result[0], result[1]))
-                    .build());
-        } catch (IllegalArgumentException e) {
-            // 3. Erro de validação (ex: arquivo vazio ou colunas erradas) -> status 400
-            return ResponseEntity.badRequest().body(LogUploadResponse.builder()
-                    .status("error")
-                    .recordsProcessed(0)
-                    .recordsFailed(0)
-                    .message(e.getMessage())
-                    .build());
-        } catch (Exception e) {
-            // 4. Erros inesperados no servidor -> status 500
-            log.error("CSV upload failed", e);
-            return ResponseEntity.internalServerError().body(LogUploadResponse.builder()
-                    .status("error")
-                    .recordsProcessed(0)
-                    .recordsFailed(0)
-                    .message("Upload failed: " + e.getMessage())
-                    .build());
+        // 1. Delega o processamento pesado do CSV para o Service (Padrão de Camadas)
+        // Exceções são tratadas automaticamente por GlobalExceptionHandler
+        int[] result = logIngestionService.uploadCsv(file);
+        
+        // 2. Monta a resposta de sucesso com o resumo do processamento
+        return ResponseEntity.ok(LogUploadResponse.builder()
+                .status("success")
+                .recordsProcessed(result[0])
+                .recordsFailed(result[1])
+                .message(String.format("Processado com sucesso: %d registros (%d falhas)", result[0], result[1]))
+                .build());
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Soft delete a log", description = "Mark a log as deleted without physically removing it")
+    public ResponseEntity<Void> deleteLog(@PathVariable Long id) {
+        if (!webLogRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Log", id);
         }
+        webLogRepository.softDeleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }

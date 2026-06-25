@@ -3,6 +3,8 @@ package com.logplatform.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 /**
  * Entidade JPA que representa uma predição feita pelo modelo de ML.
@@ -18,6 +20,8 @@ import java.time.LocalDateTime;
 @Entity // Define que esta classe é uma entidade gerenciada pelo JPA e mapeada para uma
         // tabela
 @Table(name = "predictions") // Especifica o nome da tabela no banco de dados para auditoria de ML
+@SQLDelete(sql = "UPDATE predictions SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
+@Where(clause = "deleted_at IS NULL")
 @Getter // Lombok: Gera automaticamente todos os métodos Getters para os campos
 @Setter // Lombok: Gera automaticamente todos os métodos Setters para os campos
 @NoArgsConstructor // Lombok: Gera um construtor vazio (exigido pelo JPA)
@@ -47,6 +51,9 @@ public class Prediction {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
     @PrePersist
     protected void onCreate() {

@@ -1,4 +1,4 @@
-version: '3.9'
+
 
 services:
   postgres:
@@ -143,7 +143,7 @@ services:
       - logplatform-net
 
   grafana:
-    image: grafana/grafana:10.4.1
+    image: grafana/grafana:latest
     container_name: plip-grafana
     ports:
       - "0.0.0.0:3000:3000"

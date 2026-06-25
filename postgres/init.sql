@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS web_logs (
     ip_address      VARCHAR(45),
     bytes_sent      INTEGER DEFAULT 0,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ,deleted_at      TIMESTAMP DEFAULT NULL
 );
 
 -- Predictions History Table
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS predictions (
     model_version   VARCHAR(100),
     latency_ms      DOUBLE PRECISION,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ,deleted_at      TIMESTAMP DEFAULT NULL
 );
 
 -- Model Metadata Table
